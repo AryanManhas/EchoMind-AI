@@ -1,0 +1,18 @@
+services:
+  db:
+    image: ankane/pgvector
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: echomind
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  whisper:
+    image: fediverse/faster-whisper-server
+    ports:
+      - '8000:8000'
+    environment:
+      - WHISPER_MODEL=tiny.en
+volumes:
+  postgres_data:

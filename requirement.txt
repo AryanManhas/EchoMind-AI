@@ -1,0 +1,37 @@
+# Core runtime
+node>=20
+
+# Frontend
+next
+react
+react-dom
+expo
+react-native
+
+# Styling / UI
+tailwindcss
+clsx
+lucide-react
+
+# Backend
+typescript
+fastify
+ws
+zod
+dotenv
+
+# Database
+prisma
+@prisma/client
+postgresql
+
+# AI / Processing
+openai
+google-generativeai
+
+# Utilities
+uuid
+pino
+jest
+eslint
+prettier

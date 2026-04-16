@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0a0a0f;
+  --foreground: #fcf8fe;
+  --surface: #0e0e12;
+  --surface-low: #131317;
+  --surface-med: #19191e;
+  --surface-high: #25252b;
+  --primary: #c799ff;
+  --secondary: #4af8e3;
+  --tertiary: #ff6c95;
+  --on-surface: #fcf8fe;
+  --on-surface-variant: #acaab0;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(199, 153, 255, 0.15) transparent;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+}
+
+/* ═══════════════════════════════════════
+   LIQUID SVG MESH BACKGROUND
+   ═══════════════════════════════════════ */
+.liquid-mesh {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: #0a0a0f;
+  pointer-events: none;
+}
+
+.liquid-mesh::before,
+.liquid-mesh::after {
+  content: "";
+  position: absolute;
+  width: 120vw;
+  height: 120vw;
+  border-radius: 40%;
+  opacity: 0.15;
+  filter: blur(80px);
+  animation: liquid-drift 25s infinite linear;
+}
+
+.liquid-mesh::before {
+  background: radial-gradient(circle, #4c1d95 0%, transparent 70%);
+  top: -20%;
+  left: -10%;
+}
+
+.liquid-mesh::after {
+  background: radial-gradient(circle, #1e3a8a 0%, transparent 70%);
+  bottom: -20%;
+  right: -10%;
+  animation-direction: reverse;
+  animation-duration: 35s;
+}
+
+@keyframes liquid-drift {
+  from { transform: rotate(0deg) scale(1); }
+  to { transform: rotate(360deg) scale(1.1); }
+}
+
+/* ═══════════════════════════════════════
+   GLASSMORPHISM 2.0
+   ═══════════════════════════════════════ */
+@layer utilities {
+  .glass {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  }
+
+  .glass-strong {
+    background: rgba(14, 14, 20, 0.65);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 32px;
+  }
+
+  /* Mobile Touch Refinements */
+  .no-tap-highlight {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .no-select {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .glass-subtle {
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+  }
+
+  /* ── Typography ── */
+  .text-display {
+    font-family: var(--font-manrope);
+    letter-spacing: -0.02em;
+    background: linear-gradient(180deg, #fcf8fe 0%, #8a8a94 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .text-label {
+    font-family: var(--font-plus-jakarta);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-weight: 700;
+    font-size: 10px;
+  }
+
+  .glow-primary {
+    filter: drop-shadow(0 0 20px rgba(199, 153, 255, 0.5));
+  }
+
+  .glow-secondary {
+    filter: drop-shadow(0 0 20px rgba(74, 248, 227, 0.4));
+  }
+}

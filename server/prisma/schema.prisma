@@ -1,0 +1,29 @@
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector")]
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions", "fullTextSearchPostgres"]
+  engineType      = "library"
+}
+
+model Transcript {
+  id        String   @id @default(uuid())
+  text      String
+  createdAt DateTime @default(now())
+}
+
+model Memory {
+  id              String   @id @default(uuid())
+  title           String
+  summary         String
+  category        String
+  importance      Float
+  rawTranscript   String?
+  nextActionDate  DateTime?
+  embedding       Unsupported("vector(768)")? // Standard embedding size for gemini/openai 
+  createdAt       DateTime @default(now())
+}
