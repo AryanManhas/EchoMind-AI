@@ -1,15 +1,18 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Mic, Library, Settings } from 'lucide-react';
+import { Mic, Library, Settings, Search, Database } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const TABS = [
   { id: 'capture', icon: Mic, path: '/', label: 'Capture' },
-  { id: 'vault', icon: Library, path: '/vault', label: 'Vault' },
+  { id: 'search', icon: Search, path: '/search', label: 'Search' },
+  { id: 'memory-vault', icon: Database, path: '/memory-vault', label: 'Memories' },
+  { id: 'vault', icon: Library, path: '/vault', label: 'Archive' },
   { id: 'settings', icon: Settings, path: '/settings', label: 'Setup' },
 ];
+
 
 export default function FloatingDock() {
   const pathname = usePathname();

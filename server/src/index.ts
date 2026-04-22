@@ -68,6 +68,30 @@ app.get('/api/memories', async (req, res) => {
   }
 });
 
+// ── Semantic Vector Search API ──
+app.get('/api/memories/semantic-search', async (req, res) => {
+  try {
+    const { q, limit } = req.query;
+    
+    if (!q || typeof q !== 'string' || q.trim().length === 0) {
+      return res.status(400).json({ error: 'Query parameter "q" is required for semantic search' });
+    }
+
+    const searchLimit = limit ? parseInt(String(limit), 10) : 5;
+    
+    const startTime = performance.now();
+    const memories = await memoryRepo.searchSimilarMemories(q.trim(), searchLimit);
+    const endTime = performance.now();
+    
+    logger.info(`[API] GET /api/memories/semantic-search — Latency: ${(endTime - startTime).toFixed(0)}ms | Found: ${memories.length}`);
+    
+    res.json({ memories });
+  } catch (err) {
+    logger.error({ err }, '[API] Semantic Search Error');
+    res.status(500).json({ error: 'Failed to perform semantic search' });
+  }
+});
+
 // ── Retry Extraction API ──
 app.post('/api/memories/:id/retry', async (req, res) => {
   try {
