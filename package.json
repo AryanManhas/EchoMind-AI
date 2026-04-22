@@ -1,4 +1,10 @@
 {
+  "name": "echomind-ai",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "cd server && yarn && yarn build",
+    "start": "cd server && node dist/index.js"
+  },
   "dependencies": {
     "@google/genai": "^1.50.0",
     "axios": "^1.15.2"
