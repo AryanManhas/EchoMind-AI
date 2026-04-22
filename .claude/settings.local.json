@@ -1,1 +1,15 @@
-{}
+{
+  "enabledMcpjsonServers": [
+    "code-review-graph",
+    "context7",
+    "postgresql",
+    "supabase",
+    "memory",
+    "github"
+  ],
+  "permissions": {
+    "allow": [
+      "mcp__code-review-graph__build_or_update_graph_tool"
+    ]
+  }
+}

@@ -1,5 +1,29 @@
 {
   "dependencies": {
-    "@google/genai": "^1.50.0"
-  }
+    "@google/genai": "^1.50.0",
+    "axios": "^1.15.2",
+    "react-native-haptic-feedback": "^3.0.0"
+  },
+  "name": "echomind-ai",
+  "version": "1.0.0",
+  "description": "EchoMind AI is a neural-inspired second brain that captures your spoken thoughts in real time, transcribes them, extracts structured memories, and stores everything in a futuristic searchable vault.",
+  "main": "generate.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AryanManhas/EchoMind-AI.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/AryanManhas/EchoMind-AI/issues"
+  },
+  "homepage": "https://github.com/AryanManhas/EchoMind-AI#readme"
 }

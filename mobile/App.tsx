@@ -7,205 +7,319 @@ import {
   TouchableOpacity,
   View,
   FlatList,
+  Platform,
 } from 'react-native';
+
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Mic, MicOff, Bluetooth, BluetoothConnected } from 'lucide-react-native';
+import { Mic, MicOff } from 'lucide-react-native';
+import { requestMultiple, PERMISSIONS } from 'react-native-permissions';
+
 import NeuralOrb from './components/NeuralOrb';
+import WaveformVisualizer from './components/WaveformVisualizer';
+
 import { useEchoMindVoice } from './hooks/useEchoMindVoice';
 import { useBluetoothAudio } from './hooks/useBluetoothAudio';
 
+const COLORS = {
+  bg: '#050505',
+  surface: '#0A0F1C',
+  primary: '#00F2FF',
+  accent: '#FF0055',
+  text: '#E2E8F0',
+  muted: '#94A3B8',
+};
+
 const App = () => {
   const {
-    isRecording, 
-    sentences, 
-    partialTranscript, 
-    audioLevel, 
-    error, 
-    startRecording, 
-    stopRecording 
+    isRecording,
+    sentences,
+    partialTranscript,
+    audioLevel,
+    error,
+    startRecording,
+    stopRecording,
   } = useEchoMindVoice();
-  
-  const { isBluetoothConnected } = useBluetoothAudio();
+
+  const { isBluetoothConnected, deviceName } = useBluetoothAudio();
   const flatListRef = useRef<FlatList>(null);
 
-  const backgroundStyle = {
-    backgroundColor: '#050505', // Deep Black for OLED
-  };
+  useEffect(() => {
+    const permissions = Platform.select({
+      android: [
+        PERMISSIONS.ANDROID.RECORD_AUDIO,
+        PERMISSIONS.ANDROID.BLUETOOTH_CONNECT,
+        PERMISSIONS.ANDROID.BLUETOOTH_SCAN,
+      ],
+      ios: [
+        PERMISSIONS.IOS.MICROPHONE,
+        PERMISSIONS.IOS.BLUETOOTH,
+      ],
+    }) || [];
+
+    requestMultiple(permissions);
+  }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaView style={[styles.safeArea, backgroundStyle]}>
-        <StatusBar barStyle="light-content" backgroundColor="#050505" />
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" />
 
-        {/* Header */}
+        {/* HEADER */}
         <View style={styles.header}>
-          <Text style={styles.logo}>EchoMind AI</Text>
-          <View style={styles.headerActions}>
-             {isBluetoothConnected ? (
-               <BluetoothConnected color="#00F2FF" size={24} />
-             ) : (
-               <Bluetooth color="#4A5568" size={24} />
-             )}
+          <View>
+            <Text style={styles.logo}>ECHOMIND</Text>
+            <Text style={styles.subtitle}>Neural Interface</Text>
+          </View>
+
+          <View style={styles.deviceWrap}>
+            <View
+              style={[
+                styles.statusDot,
+                { backgroundColor: isBluetoothConnected ? COLORS.primary : '#555' },
+              ]}
+            />
+            <Text style={styles.deviceText}>
+              {isBluetoothConnected ? deviceName : 'No Device'}
+            </Text>
           </View>
         </View>
 
-        {/* Neural visualizer section */}
-        <View style={styles.orbContainer}>
-          <NeuralOrb scale={audioLevel} isRecording={isRecording} />
-          <Text style={styles.statusText}>
-            {isRecording ? 'NEURAL LINK ACTIVE' : 'READY FOR INPUT'}
-          </Text>
-        </View>
+        {/* ORB */}
+        <View style={styles.orbSection}>
+          <View style={styles.outerGlow} />
+          <View style={styles.innerGlow} />
 
-        {/* Transcript Scrolling List */}
-        <View style={styles.transcriptContainer}>
-          <FlatList
-            ref={flatListRef}
-            data={sentences}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
-              <View style={styles.sentenceBubble}>
-                <Text style={styles.sentenceText}>{item}</Text>
-              </View>
-            )}
-            ListFooterComponent={
-              partialTranscript ? (
-                <View style={styles.partialBubble}>
-                   <Text style={styles.partialText}>{partialTranscript}</Text>
-                </View>
-              ) : null
-            }
-            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-            contentContainerStyle={styles.scrollContent}
+          <NeuralOrb scale={audioLevel} isRecording={isRecording} />
+
+          <Text style={styles.statusText}>
+            {isRecording ? '● LISTENING' : '● IDLE'}
+          </Text>
+
+          <WaveformVisualizer
+            audioLevel={audioLevel}
+            isRecording={isRecording}
           />
         </View>
 
-        {/* Error Banner */}
-        {error && (
-          <View style={styles.errorBanner}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        )}
-
-        {/* Primary Control */}
-        <View style={styles.controls}>
-          <TouchableOpacity
-            style={[styles.micButton, isRecording && styles.micButtonActive]}
-            onPress={isRecording ? stopRecording : startRecording}
-            activeOpacity={0.7}
-          >
-            {isRecording ? (
-              <MicOff color="#FFFFFF" size={36} />
-            ) : (
-              <Mic color="#FFFFFF" size={36} />
-            )}
-          </TouchableOpacity>
+        {/* CHAT */}
+        <View style={styles.chatContainer}>
+          {sentences.length === 0 ? (
+            <View style={styles.empty}>
+              <Text style={styles.emptyText}>
+                Tap mic to activate EchoMind
+              </Text>
+            </View>
+          ) : (
+            <FlatList
+              ref={flatListRef}
+              data={sentences}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={({ item }) => (
+                <View style={styles.bubble}>
+                  <Text style={styles.bubbleText}>{item}</Text>
+                </View>
+              )}
+              ListFooterComponent={
+                partialTranscript ? (
+                  <Text style={styles.partial}>{partialTranscript}</Text>
+                ) : null
+              }
+              onContentSizeChange={() =>
+                flatListRef.current?.scrollToEnd({ animated: true })
+              }
+            />
+          )}
         </View>
+
+        {/* MIC BUTTON */}
+        <View style={styles.controls}>
+          <View style={styles.micWrapper}>
+            <View style={styles.micOuterRing} />
+            <View style={styles.micGlow} />
+
+            <TouchableOpacity
+              style={[
+                styles.micButton,
+                isRecording && { backgroundColor: COLORS.accent },
+              ]}
+              onPress={isRecording ? stopRecording : startRecording}
+            >
+              {isRecording ? (
+                <MicOff size={30} color="#fff" />
+              ) : (
+                <Mic size={30} color="#fff" />
+              )}
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.micLabel}>
+            {isRecording ? 'STOP' : 'ACTIVATE'}
+          </Text>
+        </View>
+
+        {/* ERROR */}
+        {error && <Text style={styles.error}>{error}</Text>}
       </SafeAreaView>
     </GestureHandlerRootView>
   );
 };
 
+export default App;
+
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
+    backgroundColor: COLORS.bg,
   },
+
   header: {
-    paddingHorizontal: 24,
-    paddingVertical: 24,
+    padding: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
+
   logo: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#FFFFFF',
+    fontSize: 20,
+    color: COLORS.primary,
     letterSpacing: 4,
   },
-  headerActions: {
+
+  subtitle: {
+    fontSize: 10,
+    color: COLORS.muted,
+    letterSpacing: 2,
+  },
+
+  deviceWrap: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  orbContainer: {
-    height: 300,
+
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6,
+  },
+
+  deviceText: {
+    color: COLORS.muted,
+    fontSize: 10,
+  },
+
+  orbSection: {
+    alignItems: 'center',
+    marginTop: 30,
+  },
+
+  outerGlow: {
+    position: 'absolute',
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: COLORS.primary,
+    opacity: 0.05,
+  },
+
+  innerGlow: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: COLORS.primary,
+    opacity: 0.08,
+  },
+
+  statusText: {
+    marginTop: 20,
+    color: COLORS.primary,
+    fontSize: 12,
+    letterSpacing: 2,
+  },
+
+  chatContainer: {
+    flex: 1,
+    marginTop: 20,
+  },
+
+  bubble: {
+    marginHorizontal: 16,
+    marginVertical: 6,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+
+  bubbleText: {
+    color: COLORS.text,
+    fontSize: 16,
+  },
+
+  partial: {
+    color: COLORS.primary,
+    marginLeft: 16,
+    fontStyle: 'italic',
+  },
+
+  empty: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  statusText: {
-    marginTop: 40,
-    color: '#00F2FF',
-    fontSize: 12,
-    fontWeight: 'bold',
-    letterSpacing: 5,
-    opacity: 0.9,
+
+  emptyText: {
+    color: COLORS.muted,
   },
-  transcriptContainer: {
-    flex: 1,
-    marginHorizontal: 16,
-    marginBottom: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
-    borderRadius: 32,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  scrollContent: {
-    padding: 20,
-  },
-  sentenceBubble: {
-    marginBottom: 16,
-    padding: 12,
-  },
-  sentenceText: {
-    color: '#CBD5E0',
-    fontSize: 18,
-    lineHeight: 26,
-    fontWeight: '300',
-  },
-  partialBubble: {
-    padding: 12,
-    opacity: 0.6,
-  },
-  partialText: {
-    color: '#00F2FF',
-    fontSize: 18,
-    lineHeight: 26,
-    fontStyle: 'italic',
-  },
-  errorBanner: {
-    backgroundColor: 'rgba(255, 0, 0, 0.1)',
-    marginHorizontal: 20,
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 10,
-    alignItems: 'center',
-  },
-  errorText: {
-    color: '#FF4D4D',
-    fontSize: 12,
-    fontWeight: '600',
-  },
+
   controls: {
-    paddingBottom: 50,
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+
+  micWrapper: {
+    justifyContent: 'center',
     alignItems: 'center',
   },
+
+  micOuterRing: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 2,
+    borderColor: 'rgba(0,242,255,0.3)',
+  },
+
+  micGlow: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: COLORS.primary,
+    opacity: 0.05,
+  },
+
   micButton: {
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: '#4B0082', // Deep Violet
+    backgroundColor: '#4B0082',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#4B0082',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
-    elevation: 15,
   },
-  micButtonActive: {
-    backgroundColor: '#FF0055',
-    shadowColor: '#FF0055',
+
+  micLabel: {
+    marginTop: 10,
+    color: COLORS.primary,
+    fontSize: 10,
+    letterSpacing: 2,
+  },
+
+  error: {
+    color: 'red',
+    textAlign: 'center',
+    marginBottom: 10,
   },
 });
-
-export default App;

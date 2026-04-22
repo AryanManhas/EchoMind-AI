@@ -9,8 +9,10 @@
       "type": "stdio"
     },
     "context7": {
-      "command": "npx",
+      "command": "cmd",
       "args": [
+        "/c",
+        "npx",
         "-y",
         "@upstash/context7-mcp@latest"
       ],
@@ -19,8 +21,10 @@
       }
     },
     "postgresql": {
-      "command": "npx",
+      "command": "cmd",
       "args": [
+        "/c",
+        "npx",
         "-y",
         "@modelcontextprotocol/server-postgres"
       ],
@@ -29,8 +33,10 @@
       }
     },
     "supabase": {
-      "command": "npx",
+      "command": "cmd",
       "args": [
+        "/c",
+        "npx",
         "-y",
         "@supabase/mcp-server-supabase@latest",
         "--read-only",
@@ -41,15 +47,19 @@
       }
     },
     "memory": {
-      "command": "npx",
+      "command": "cmd",
       "args": [
+        "/c",
+        "npx",
         "-y",
         "@modelcontextprotocol/server-memory"
       ]
     },
     "github": {
-      "command": "npx",
+      "command": "cmd",
       "args": [
+        "/c",
+        "npx",
         "-y",
         "@modelcontextprotocol/server-github"
       ],
