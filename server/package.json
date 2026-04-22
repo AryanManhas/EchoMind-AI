@@ -1,7 +1,11 @@
 {
+  "name": "echomind-server",
+  "version": "1.0.0",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "start": "ts-node src/index.ts",
+    "build": "prisma generate && tsc",
+    "start": "node dist/index.js",
+    "start:dev": "ts-node src/index.ts",
     "prisma:generate": "prisma generate"
   },
   "dependencies": {
