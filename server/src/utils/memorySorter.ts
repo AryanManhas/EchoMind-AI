@@ -11,7 +11,7 @@ export async function sortMemory(transcript: string) {
     }
 
     const model = genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
         systemInstruction: "You are the EchoMind Sorting Engine. Analyze the following transcript. If it contains a long-term fact, task, or significant event, output a JSON object. If not, output NULL.\n\nOutput Schema: { \"title\": \"string\", \"summary\": \"string\", \"category\": \"Task|Fact|Idea\", \"importance\": 0.0-1.0 }",
     });
 

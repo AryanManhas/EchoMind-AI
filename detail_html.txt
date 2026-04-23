@@ -1,0 +1,226 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@700;800&amp;family=Plus+Jakarta+Sans:wght@500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline-variant": "#48474c",
+                        "inverse-primary": "#7744b5",
+                        "surface": "#0e0e12",
+                        "on-secondary-fixed-variant": "#00655b",
+                        "tertiary-fixed": "#ff8fa9",
+                        "inverse-surface": "#fcf8fe",
+                        "on-tertiary": "#48001c",
+                        "primary": "#c799ff",
+                        "surface-container-highest": "#25252b",
+                        "error-container": "#a70138",
+                        "secondary-fixed-dim": "#33e9d5",
+                        "primary-fixed-dim": "#af7aef",
+                        "on-secondary": "#005b51",
+                        "secondary-fixed": "#4af8e3",
+                        "inverse-on-surface": "#555459",
+                        "surface-container": "#19191e",
+                        "surface-tint": "#c799ff",
+                        "on-error": "#490013",
+                        "primary-fixed": "#bc87fe",
+                        "error-dim": "#d73357",
+                        "secondary-container": "#006a60",
+                        "on-tertiary-container": "#100003",
+                        "background": "#0e0e12",
+                        "on-secondary-container": "#dcfff8",
+                        "tertiary-fixed-dim": "#ff769b",
+                        "primary-dim": "#ba85fb",
+                        "tertiary": "#ff6c95",
+                        "primary-container": "#bc87fe",
+                        "on-error-container": "#ffb2b9",
+                        "on-surface": "#fcf8fe",
+                        "tertiary-container": "#fd3e80",
+                        "surface-container-high": "#1f1f25",
+                        "surface-variant": "#25252b",
+                        "on-tertiary-fixed": "#380014",
+                        "on-primary-fixed-variant": "#40007a",
+                        "on-background": "#fcf8fe",
+                        "surface-container-low": "#131317",
+                        "error": "#ff6e84",
+                        "on-primary-fixed": "#000000",
+                        "secondary": "#4af8e3",
+                        "surface-bright": "#2c2b32",
+                        "secondary-dim": "#33e9d5",
+                        "on-primary": "#440080",
+                        "surface-container-lowest": "#000000",
+                        "on-tertiary-fixed-variant": "#770033",
+                        "tertiary-dim": "#ff6c95",
+                        "on-secondary-fixed": "#00463f",
+                        "on-surface-variant": "#acaab0",
+                        "surface-dim": "#0e0e12",
+                        "outline": "#76757a",
+                        "on-primary-container": "#340064"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(37, 37, 43, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary selection:text-on-primary-fixed">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#131317]/60 backdrop-blur-xl shadow-2xl shadow-black/40">
+<div class="flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-3">
+<button class="text-on-surface hover:opacity-80 transition-opacity" style="">
+<span class="material-symbols-outlined" style="">arrow_back</span>
+</button>
+<span class="text-2xl font-bold tracking-tighter text-[#fcf8fe] font-headline" style="">EchoMind</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#c799ff] hover:opacity-80 transition-opacity cursor-pointer" style="">share</span>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant/20">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="Close-up portrait of a person with soft cinematic lighting and a blurred urban background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0aV0ZIYJY-ocf6VVOyc3sQKErOq99RmCQE7-M15QJlXsfefalvWvgHiEg4oEAxGwUFsXq16BsxiYKL94_ry2RH3e67BO19TDWfzEg0EMAh7iomrnXFjRDhTi_FcbFF12tI6DB8p79EQ5bRhuoAhDONzZ-tbm32RQnb75lp5y14bcWPKaceyi3624Eg-CBEVjtZPHmLAQWpYQkW2GokLgyY0mQ7JH3PaDaLzYa6mIu0mWzP1CJBeplWT6wcYIMfTG2L0UU5cUrUYma" style="">
+</div>
+</div>
+</div>
+<div class="bg-gradient-to-r from-transparent via-[#48474c]/15 to-transparent h-[1px] w-full absolute bottom-0"></div>
+</header>
+<main class="pt-20 pb-32 max-w-4xl mx-auto px-4 md:px-6">
+<!-- Hero Visual -->
+<section class="relative w-full h-[442px] md:h-[530px] rounded-3xl overflow-hidden mb-8 group">
+<img alt="Memory Visual" class="w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-700" data-alt="Wide cinematic landscape of misty mountains at twilight with ethereal purple and blue light reflecting off a calm lake" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOb7RL2mSock_n9wOSvY6BHcKZ4QAgYKnGOUc-ZfYbSCllXbRvAJLptS1_w5XzvVx-ML1loufKEfnEvYT5gws1NCgzVtL3lQ11S29u1WEtVDnHyyx4LCGIaX96689_SFObwWrCCJqDkb26DqaYN-niEvRmzaE7U2TopLm_00cBFyHOC_ze-Q4b2dZKdg-hu2cxfZgjWd1qmggh9Jzhq5IyyEmHeG3GtueA9eiKKB3PRG0KBADU7QNnaGS87mMqpJuJJ0UPEf9BPWAm" style="">
+<div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent"></div>
+<div class="absolute bottom-8 left-8 right-8">
+<div class="flex gap-2 mb-4">
+<span class="px-3 py-1 rounded-full bg-secondary/20 text-secondary text-[10px] font-label font-semibold uppercase tracking-widest backdrop-blur-md" style="">Travel</span>
+<span class="px-3 py-1 rounded-full bg-primary/20 text-primary text-[10px] font-label font-semibold uppercase tracking-widest backdrop-blur-md" style="">Personal</span>
+</div>
+<h1 class="text-4xl md:text-5xl font-headline font-extrabold tracking-tight text-on-surface" style="">The Silent Valley Echo</h1>
+<p class="text-on-surface-variant font-label text-sm mt-2 flex items-center gap-2" style="">
+<span class="material-symbols-outlined text-sm" style="">calendar_today</span> October 14, 2023 
+                    <span class="mx-2" style="">•</span>
+<span class="material-symbols-outlined text-sm" style="">location_on</span> Swiss Alps
+                </p>
+</div>
+</section>
+<!-- Bento Layout for Content -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- AI Summary - Glassmorphic Primary -->
+<div class="md:col-span-2 glass-panel p-8 rounded-3xl border border-outline-variant/15 shadow-2xl relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-20">
+<span class="material-symbols-outlined text-6xl text-primary" style="font-variation-settings: &quot;FILL&quot; 1;">auto_awesome</span>
+</div>
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary" style="">psychology</span>
+<h2 class="font-headline font-bold text-xl text-primary" style="">AI Insight Summary</h2>
+</div>
+<p class="text-on-surface leading-relaxed text-lg mb-6" style="">
+                    This memory captures a rare moment of absolute stillness. The environmental data suggests a temperature of 4°C with high humidity, contributing to the atmospheric mist visible in your captures. 
+                </p>
+<div class="space-y-4">
+<div class="flex gap-4 p-4 rounded-2xl bg-surface-container-lowest/30 border border-outline-variant/10">
+<span class="material-symbols-outlined text-secondary-fixed" style="">mood</span>
+<div>
+<p class="text-xs font-label uppercase tracking-widest text-on-surface-variant mb-1" style="">Detected Emotion</p>
+<p class="text-on-surface font-semibold" style="">Serenity &amp; Awe</p>
+</div>
+</div>
+<div class="flex gap-4 p-4 rounded-2xl bg-surface-container-lowest/30 border border-outline-variant/10">
+<span class="material-symbols-outlined text-tertiary" style="">music_note</span>
+<div>
+<p class="text-xs font-label uppercase tracking-widest text-on-surface-variant mb-1" style="">Ambient Soundscape</p>
+<p class="text-on-surface font-semibold" style="">Wind whistling through pine needles, distant glacial crackle.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Side Metrics -->
+<div class="flex flex-col gap-6">
+<div class="glass-panel p-6 rounded-3xl border border-outline-variant/15 flex flex-col justify-between h-full">
+<div>
+<h3 class="text-xs font-label uppercase tracking-widest text-on-surface-variant mb-4" style="">Memory Fidelity</h3>
+<div class="flex items-end gap-2">
+<span class="text-4xl font-headline font-extrabold text-on-surface" style="">98</span>
+<span class="text-primary font-bold mb-1" style="">%</span>
+</div>
+</div>
+<div class="mt-8 space-y-2">
+<div class="h-1 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-secondary w-[98%]"></div>
+</div>
+<p class="text-[10px] text-on-surface-variant text-right font-label" style="">High-Resolution Neural Capture</p>
+</div>
+</div>
+<div class="glass-panel p-6 rounded-3xl border border-outline-variant/15">
+<h3 class="text-xs font-label uppercase tracking-widest text-on-surface-variant mb-4" style="">Related Memories</h3>
+<div class="flex -space-x-3 overflow-hidden">
+<img alt="" class="inline-block h-10 w-10 rounded-full ring-2 ring-surface" data-alt="Blurry mountain peak at sunrise" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9R4DWQ8UGmikvjjCSs82sm-wvC01OukfKykJm2ACgCSRmq4AFaXPVV0__qecGRX4WaPhOkcZGsKpi2JZSENLZnuH4vaallDOqGbl48C9rC--pBJ-nexmS4bvWpTDQUNRTKXIktNwSRvK_oBBqtSqK1-8V-cgkQQj_kLCZRZcnT0WgRfNsPil7e__7U2Ptu7Y2Qlme7nSbdMBwS1-bE8wzob-tVWNYKR4E7Qfym2k8CVtvNfcyd8esonVLj7kzmiOXTbbN3K7VrYVu" style="">
+<img alt="" class="inline-block h-10 w-10 rounded-full ring-2 ring-surface" data-alt="Forest path with sunlight filtering through leaves" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBo4MA011kYX5ivah8TQnaXIQBhgIfxL5bp6qquqIO7QO1dRiHZBE-2NCFY9MeBmfo-PavZqYM-bBgdsWVqY54jPteLAKAiSROgOkysaoyPf4Ll8sJAfSxsCavNuo0c8ptQqLg3vARN2T787wmFOv3oC2c0hjtWhexCSyBH0XttNUdy7tBjZ44XOjIvqj0PFwOKehxdCQ8RaNJb-ddBi-xYDpRrstUrakg--UGZbw-57hb4SbZUmKt0Z78GbW91VxemCg_e9xzZH1Nt" style="">
+<img alt="" class="inline-block h-10 w-10 rounded-full ring-2 ring-surface" data-alt="Serene lake reflecting blue sky" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9fwTEdS1WyspK_ynNMqK-QLxbdP0eeJ0FiKRWvJl9huEq9CsqlF7o-dLlI0D3UVfbM1zmvjUvFWMtLMQ0qwtPrvkIkZVWUeSCS7-af2QkSO74gGe5CPPM2R3IwVNN1FbpWSrTYRyl1lVq6GUjXGF62VO0pRg_-lvsGgEvCVn5uOr9-UYCt0E1bf8ZLHP5GjptN3ICSg1WALVd3XxmwDaEZ2xThBtScxLlET6fNqauVgNeSpGRonAm-7zQhec8GB7Myc8xKMPO_LDU" style="">
+<div class="flex h-10 w-10 items-center justify-center rounded-full bg-surface-container-highest ring-2 ring-surface text-[10px] font-bold" style="">+12</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Journal Text Section -->
+<section class="mt-12">
+<h2 class="font-headline font-bold text-2xl mb-6 text-on-surface" style="">The Experience</h2>
+<div class="columns-1 md:columns-2 gap-12 text-on-surface-variant leading-loose space-y-6">
+<p class="" style="">
+                    I remember the air being so sharp it stung my lungs. Not in an unpleasant way, but in a way that made me feel more alive than I had in months. The "Aura" capture system was active, but for a moment, I forgot the technology was even there.
+                </p>
+<p class="border-l-2 border-primary pl-6 py-2 text-on-surface italic font-body text-lg" style="">
+                    "The valley didn't just look quiet; it felt like the very concept of sound had been deleted from the universe."
+                </p>
+<p class="" style="">
+                    We walked for nearly three hours before reaching the ridge. The AI summary notes the emotional spike right as the clouds broke—it's fascinating to see my internal physiological response mapped so perfectly to the visual data.
+                </p>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-6 left-0 right-0 z-50 flex justify-around items-center px-4 py-2 pointer-events-none">
+<div class="bg-[#25252b]/40 backdrop-blur-lg border border-[#48474c]/15 rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.4)] flex justify-around items-center w-[90%] pointer-events-auto p-1">
+<a class="flex flex-col items-center justify-center text-[#fcf8fe]/50 p-3 hover:text-[#fcf8fe] transition-colors active:scale-90 duration-200" href="#" style="">
+<span class="material-symbols-outlined" style="">auto_awesome</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#fcf8fe]/50 p-3 hover:text-[#fcf8fe] transition-colors active:scale-90 duration-200" href="#" style="">
+<span class="material-symbols-outlined" style="">explore</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#fcf8fe]/50 p-3 hover:text-[#fcf8fe] transition-colors active:scale-90 duration-200" href="#" style="">
+<span class="material-symbols-outlined text-[#c799ff]" style="font-variation-settings: &quot;FILL&quot; 1;">auto_graph</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#fcf8fe]/50 p-3 hover:text-[#fcf8fe] transition-colors active:scale-90 duration-200" href="#" style="">
+<span class="material-symbols-outlined" style="">person</span>
+</a>
+</div>
+</nav>
+</body></html>

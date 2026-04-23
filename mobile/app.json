@@ -1,4 +1,26 @@
 {
-  "name": "mobile_new",
-  "displayName": "EchoMind AI"
+  "expo": {
+    "name": "EchoMind AI",
+    "slug": "echomind-ai",
+    "version": "0.0.1",
+    "scheme": "echomind",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "android": {
+      "package": "com.anonymous.mobile_new",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "EchoMind needs access to your microphone to transcribe your voice."
+        }
+      ]
+    ]
+  }
 }

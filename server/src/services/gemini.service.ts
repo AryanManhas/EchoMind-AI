@@ -7,7 +7,7 @@ const apiKey = env.GOOGLE_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey);
 
 export async function extractMemory(transcript: string): Promise<MemoryExtraction | null> {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' }); // Using a strong model as per user's typical high-tier settings, or fallback to flash
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' }); // Using a strong model as per user's typical high-tier settings, or fallback to flash
 
     const systemPrompt = `You are the EchoMind Memory Engine, an intelligent "Second Brain".
 Your goal is to extract a highly accurate, structured memory from the provided transcript.
@@ -30,7 +30,7 @@ Provide an importance score from 0.0 (trivial) to 1.0 (critical).`;
                         summary: { type: SchemaType.STRING },
                         category: { 
                             type: SchemaType.STRING, 
-                            enum: ['Fact', 'Task', 'Idea'] 
+                            description: 'Fact, Task, Idea'
                         },
                         importance: { type: SchemaType.NUMBER }
                     },
@@ -79,5 +79,17 @@ Provide an importance score from 0.0 (trivial) to 1.0 (critical).`;
         }
         logger.error({ error }, '[INTEL] Failed to extract memory');
         return null;
+    }
+}
+
+export async function extractContext(text: string) {
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const prompt = `Extract useful context or entities from the following text and summarize them concisely:\n\n"${text}"`;
+    try {
+        const result = await model.generateContent(prompt);
+        return { context: result.response.text() };
+    } catch (error: any) {
+        logger.error({ error }, '[INTEL] Failed to extract context');
+        return { context: null, error: error.message || 'Extraction failed' };
     }
 }

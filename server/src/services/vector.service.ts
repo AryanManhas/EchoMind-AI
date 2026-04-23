@@ -7,14 +7,14 @@ const ai = new GoogleGenAI({
 
 export class VectorService {
   /**
-   * Generates a 768-dimensional embedding vector for the provided text.
+   * Generates a 3072-dimensional embedding vector for the provided text.
    * @param text The text to embed
-   * @returns Array of 768 floats representing the embedding
+   * @returns Array of 3072 floats representing the embedding
    */
   async generateEmbedding(text: string): Promise<number[]> {
     try {
       const response = await ai.models.embedContent({
-        model: 'text-embedding-004',
+        model: 'gemini-embedding-001',
         contents: text,
       });
 

@@ -8,7 +8,7 @@ const envSchema = z.object({
   GOOGLE_API_KEY: z.string().min(1, 'Google API Key is required'),
   WHISPER_URL: z.string().url().default('http://localhost:8000/asr'),
   LOG_LEVEL: z.string().default('info'),
-  DEMO_MODE: z.string().transform((s) => s === 'true').default('false'),
+  DEMO_MODE: z.string().default('false').transform((s) => s === 'true'),
 });
 
 const _env = envSchema.safeParse(process.env);

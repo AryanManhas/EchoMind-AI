@@ -1,0 +1,240 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@700;800&amp;family=Plus+Jakarta+Sans:wght@500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline-variant": "#48474c",
+                    "inverse-primary": "#7744b5",
+                    "surface": "#0e0e12",
+                    "on-secondary-fixed-variant": "#00655b",
+                    "tertiary-fixed": "#ff8fa9",
+                    "inverse-surface": "#fcf8fe",
+                    "on-tertiary": "#48001c",
+                    "primary": "#c799ff",
+                    "surface-container-highest": "#25252b",
+                    "error-container": "#a70138",
+                    "secondary-fixed-dim": "#33e9d5",
+                    "primary-fixed-dim": "#af7aef",
+                    "on-secondary": "#005b51",
+                    "secondary-fixed": "#4af8e3",
+                    "inverse-on-surface": "#555459",
+                    "surface-container": "#19191e",
+                    "surface-tint": "#c799ff",
+                    "on-error": "#490013",
+                    "primary-fixed": "#bc87fe",
+                    "error-dim": "#d73357",
+                    "secondary-container": "#006a60",
+                    "on-tertiary-container": "#100003",
+                    "background": "#0e0e12",
+                    "on-secondary-container": "#dcfff8",
+                    "tertiary-fixed-dim": "#ff769b",
+                    "primary-dim": "#ba85fb",
+                    "tertiary": "#ff6c95",
+                    "primary-container": "#bc87fe",
+                    "on-error-container": "#ffb2b9",
+                    "on-surface": "#fcf8fe",
+                    "tertiary-container": "#fd3e80",
+                    "surface-container-high": "#1f1f25",
+                    "surface-variant": "#25252b",
+                    "on-tertiary-fixed": "#380014",
+                    "on-primary-fixed-variant": "#40007a",
+                    "on-background": "#fcf8fe",
+                    "surface-container-low": "#131317",
+                    "error": "#ff6e84",
+                    "on-primary-fixed": "#000000",
+                    "secondary": "#4af8e3",
+                    "surface-bright": "#2c2b32",
+                    "secondary-dim": "#33e9d5",
+                    "on-primary": "#440080",
+                    "surface-container-lowest": "#000000",
+                    "on-tertiary-fixed-variant": "#770033",
+                    "tertiary-dim": "#ff6c95",
+                    "on-secondary-fixed": "#00463f",
+                    "on-surface-variant": "#acaab0",
+                    "surface-dim": "#0e0e12",
+                    "outline": "#76757a",
+                    "on-primary-container": "#340064"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.5rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .aurora-glow {
+            background: radial-gradient(circle at center, rgba(199, 153, 255, 0.4) 0%, rgba(74, 248, 227, 0.2) 40%, transparent 70%);
+            filter: blur(40px);
+        }
+        .noise-overlay {
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.05;
+            pointer-events: none;
+        }
+        .glass-orb {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                inset 0 0 40px rgba(199, 153, 255, 0.1),
+                0 20px 50px rgba(0, 0, 0, 0.5),
+                0 0 100px rgba(199, 153, 255, 0.1);
+        }
+        .orb-glow-inner {
+            background: radial-gradient(circle at 30% 30%, rgba(199, 153, 255, 0.15) 0%, transparent 70%);
+        }
+        @keyframes float-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-float {
+            animation: float-slow 6s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary/30 min-h-screen overflow-x-hidden">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 w-full z-50 bg-[#131317]/60 backdrop-blur-xl shadow-2xl shadow-black/40">
+<div class="flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden outline outline-1 outline-outline-variant/15">
+<img alt="User Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDPISNfeoPhxHe3OKIKhWEQpb-fJmMgxEzSwOIwRIbV-K1a1JH65bYyZsFoS2_Kjv0g1Us0BgQTlZFEkw4l687WTWKAsvcOEMRMl-8l_9Fgy-l1ECeqSP9jtz0HxNm3TCcI8BWn2UN_VhJCDT6JMb5d127HZIm9qQ_hAG3StrSPuXlMntjD8KhALclJ_DPWW5XudWXkzscCwl7zJ_PRVaNnQuL2YzonsA0D_4F9SXdNQocqJy7sukPxn4bycmOkcquoVFubks8b3WT" style="">
+</div>
+<h1 class="text-2xl font-bold tracking-tighter text-[#fcf8fe] font-headline" style="">EchoMind</h1>
+</div>
+<div class="hidden md:flex items-center gap-8 font-label text-sm">
+<a class="text-[#c799ff] transition-opacity hover:opacity-80" href="#" style="">Listen</a>
+<a class="text-[#fcf8fe]/60 transition-opacity hover:opacity-80" href="#" style="">Library</a>
+<a class="text-[#fcf8fe]/60 transition-opacity hover:opacity-80" href="#" style="">Discover</a>
+</div>
+<button class="text-[#c799ff] hover:opacity-80 transition-opacity active:duration-150 active:scale-95" style="">
+<span class="material-symbols-outlined" data-icon="notifications" style="">notifications</span>
+</button>
+</div>
+<div class="bg-gradient-to-r from-transparent via-[#48474c]/15 to-transparent h-[1px] w-full absolute bottom-0"></div>
+</header>
+<main class="relative pt-24 pb-32 px-6 flex flex-col items-center justify-center min-h-screen overflow-hidden">
+<!-- Background Decor -->
+<div class="absolute inset-0 noise-overlay"></div>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] aurora-glow rounded-full -z-10"></div>
+<!-- The Glassmorphic Listening Prism -->
+<div class="relative group cursor-pointer animate-float">
+<!-- Outermost Glow Ring -->
+<div class="absolute inset-0 bg-primary/20 rounded-full blur-[80px] opacity-30 group-hover:opacity-50 transition-opacity duration-1000"></div>
+<!-- Main Glass Disc -->
+<div class="relative w-72 h-72 md:w-88 md:h-88 rounded-full glass-orb p-px">
+<div class="w-full h-full rounded-full flex flex-col items-center justify-center relative overflow-hidden orb-glow-inner">
+<!-- Waveform Visualizer (Abstracted from Image 2 style) -->
+<div class="absolute inset-0 flex items-center justify-center opacity-40">
+<svg class="w-full h-32" preserveAspectRatio="none" viewBox="0 0 400 100" xmlns="http://www.w3.org/2000/svg">
+<path d="M0,50 Q100,0 200,50 T400,50" fill="none" stroke="url(#waveGradient)" stroke-width="2">
+<animate attributeName="d" dur="5s" infinite="" repeatCount="indefinite" values="M0,50 Q100,0 200,50 T400,50; M0,50 Q100,100 200,50 T400,50; M0,50 Q100,0 200,50 T400,50"></animate>
+</path>
+<defs>
+<linearGradient id="waveGradient" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#c799ff"></stop>
+<stop offset="50%" stop-color="#4af8e3"></stop>
+<stop offset="100%" stop-color="#ff6c95"></stop>
+</linearGradient>
+</defs>
+</svg>
+</div>
+<!-- Listening Icon -->
+<div class="relative z-10 mb-2">
+<span class="material-symbols-outlined text-on-surface text-5xl md:text-6xl drop-shadow-[0_0_15px_rgba(199,153,255,0.5)]" data-icon="mic_external_on" style="font-variation-settings: &quot;FILL&quot; 0, &quot;wght&quot; 200;">mic_external_on</span>
+</div>
+<!-- Status Text -->
+<div class="relative z-10 text-center">
+<p class="font-headline text-2xl font-bold text-on-surface tracking-tight" style="">Listening...</p>
+<div class="flex items-center justify-center gap-2 mt-2">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+<span class="font-label text-[10px] uppercase tracking-[0.2em] text-on-surface-variant/80" style="">Hardware Connected</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Floating Orbital Elements -->
+<div class="absolute -top-4 -right-2 w-12 h-12 rounded-full glass-orb flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-secondary text-sm" data-icon="auto_awesome" style="">auto_awesome</span>
+</div>
+<div class="absolute -bottom-2 -left-2 w-10 h-10 rounded-full glass-orb flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="favorite" style="font-variation-settings: &quot;FILL&quot; 1;">favorite</span>
+</div>
+</div>
+<!-- Editorial Typography Section -->
+<div class="mt-20 text-center max-w-2xl">
+<h2 class="font-headline text-3xl md:text-5xl font-extrabold tracking-tight mb-4 leading-tight" style="">
+                Discover your <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary" style="">Sonic Identity.</span>
+</h2>
+<p class="font-body text-on-surface-variant text-lg md:text-xl leading-relaxed opacity-80 px-4" style="">
+                EchoMind analyzes ambient patterns to curate a living stream of consciousness. Minimal. Immersive. Yours.
+            </p>
+</div>
+<!-- Interactive Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-20 w-full max-w-5xl">
+<div class="col-span-1 md:col-span-2 p-8 rounded-2xl bg-surface-container border border-outline-variant/15 relative overflow-hidden group">
+<div class="relative z-10">
+<span class="font-label text-xs text-secondary mb-2 block uppercase tracking-widest" style="">Now Capturing</span>
+<h3 class="font-headline text-2xl font-bold mb-4" style="">Deep Silence Ambient</h3>
+<div class="flex items-center gap-4 text-on-surface-variant text-sm">
+<div class="flex -space-x-2">
+<img alt="Listener 1" class="w-6 h-6 rounded-full border border-surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGyVQAkzTKsfz6MsNQaHAqH06_rDHIyWY0EXdA6PIsmgUvsezJWvO7mYmhn141KWEB_9m4BIhcMSo1SfNtFDQdc7Td0t-F0mphAaLGn17o0Hft57-CqQNbUedBjqcZm9bN1g3o0mjd5oybuFF0phy2ocvJzMhDqNHgV1VyJHf7XiqK7rUy2v8xsHsjCL4VATSvlq7QCyCk1PDoPh-QymnvSISxdhvDuPZSfoqiU73V1OcJABNPj54N4E00kXx7UViQVyaajr6qNgsg" style="">
+<img alt="Listener 2" class="w-6 h-6 rounded-full border border-surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoQv40_3fIAm35nGOt6eeaUOZBmV-IPEMUnsSuGRR451c5aN7anBqYZwZY0E4P3JKKGNEj0lZyuSZZ2S88BGguAbZPQc6SB3-HrTcsY_6lUT2Ao1Ge8Wo7SBVOhXxHiZ6hV26gf98Skw8UVTO1FjjOEZoV2GZo4SJy5CozQ03TYrimwslP_r-04RyMEauhAqUWCqntIf4lthBATwEMTrTUubKCK1-QOZEn3e9XP0N2j9QlajBCz1ZojBZaAgmmBrMTyUgUMNi-CqxI" style="">
+</div>
+<span class="" style="">+1.2k listening with you</span>
+</div>
+</div>
+<div class="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl -mr-24 -mt-24 group-hover:bg-primary/10 transition-colors"></div>
+</div>
+<div class="p-8 rounded-2xl bg-surface-container-high border border-outline-variant/15 flex flex-col justify-between group">
+<div class="w-12 h-12 rounded-xl bg-surface-variant flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-primary" data-icon="settings_input_component" style="">settings_input_component</span>
+</div>
+<div>
+<h3 class="font-headline text-lg font-bold" style="">Atmosphere</h3>
+<p class="text-sm text-on-surface-variant opacity-70" style="">Adjust the resonance of your current space.</p>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-6 left-0 right-0 z-50 flex justify-around items-center px-4 py-2 pointer-events-none">
+<div class="pointer-events-auto bg-[#25252b]/40 backdrop-blur-lg border border-[#48474c]/15 rounded-2xl w-[90%] max-w-md flex justify-around items-center p-2 shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
+<a class="flex flex-col items-center justify-center bg-gradient-to-br from-[#c799ff] to-[#bc87fe] text-[#0e0e12] rounded-xl p-3 shadow-[0_0_15px_rgba(199,153,255,0.5)] active:scale-90 transition-transform duration-200" href="#" style="">
+<span class="material-symbols-outlined" data-icon="auto_awesome" style="font-variation-settings: &quot;FILL&quot; 1;">auto_awesome</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#fcf8fe]/50 p-3 hover:text-[#fcf8fe] transition-colors active:scale-90 duration-200" href="#" style="">
+<span class="material-symbols-outlined" data-icon="explore" style="">explore</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#fcf8fe]/50 p-3 hover:text-[#fcf8fe] transition-colors active:scale-90 duration-200" href="#" style="">
+<span class="material-symbols-outlined" data-icon="auto_graph" style="">auto_graph</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#fcf8fe]/50 p-3 hover:text-[#fcf8fe] transition-colors active:scale-90 duration-200" href="#" style="">
+<span class="material-symbols-outlined" data-icon="person" style="">person</span>
+</a>
+</div>
+</nav>
+<!-- Decorative Gradient Mesh Bottom -->
+<div class="fixed bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-primary/10 to-transparent pointer-events-none -z-10"></div>
+</body></html>
