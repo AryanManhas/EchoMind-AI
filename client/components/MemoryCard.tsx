@@ -42,7 +42,7 @@ export default function MemoryCard({ memory }: { memory: Memory }) {
   return (
     <div
       className={`glass relative overflow-hidden rounded-2xl p-4 flex flex-col gap-2 border border-white/10
-        transition-shadow duration-300 ${style.glow}`}
+        transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] ${style.glow}`}
     >
       {/* Shimmer sweep on mount */}
       <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/[0.03] to-white/0

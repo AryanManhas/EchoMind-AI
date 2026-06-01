@@ -43,6 +43,7 @@ export interface WSAuthMessage extends WSMessage<'AUTH'> {
 export interface WSTextTranscript extends WSMessage<'TEXT_TRANSCRIPT'> {
   text: string;
   isFinal?: boolean;
+  sessionId?: string;
 }
 
 export interface WSStreamControl extends WSMessage<'STREAM_START' | 'STREAM_STOP'> {

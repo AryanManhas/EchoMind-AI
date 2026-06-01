@@ -10,18 +10,33 @@ const log = createLogger('queue');
  */
 export function getRedisConnection(): ConnectionOptions {
   const url = new URL(env.REDIS_URL);
+  
+  const isTls = url.protocol === 'rediss:';
+  
   return {
     host: url.hostname,
-    port: parseInt(url.port) || 6379,
+    port: parseInt(url.port) || (isTls ? 6380 : 6379),
     password: url.password || undefined,
+    username: url.username || undefined,
+    tls: isTls ? { rejectUnauthorized: false } : undefined,
     maxRetriesPerRequest: null,
+    enableOfflineQueue: false, // Fail fast if Redis is down
+    retryStrategy(times: number) {
+      // Exponential backoff with a cap of 10 seconds
+      return Math.min(times * 50, 10000);
+    },
   };
 }
 
 /**
  * Create a typed BullMQ queue with standard settings.
  */
-export function createQueue<T>(name: string): Queue<T> {
+export function createQueue<T>(name: string): Queue<T> | null {
+  if (!env.ENABLE_QUEUES || !env.ENABLE_REDIS) {
+    log.info({ queue: name }, 'Queue creation skipped (ENABLE_QUEUES or ENABLE_REDIS is false)');
+    return null;
+  }
+
   const queue = new Queue<T>(name, {
     connection: getRedisConnection(),
     defaultJobOptions: {
@@ -47,7 +62,12 @@ export function createWorker<T>(
   name: string,
   processor: (job: Job<T>) => Promise<any>,
   concurrency: number = 3,
-): Worker<T> {
+): Worker<T> | null {
+  if (!env.ENABLE_QUEUES || !env.ENABLE_REDIS) {
+    log.info({ queue: name }, 'Worker creation skipped (ENABLE_QUEUES or ENABLE_REDIS is false)');
+    return null;
+  }
+
   const worker = new Worker<T>(name, processor, {
     connection: getRedisConnection(),
     concurrency,

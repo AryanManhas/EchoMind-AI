@@ -1,5 +1,5 @@
 import prisma from '../lib/prisma.js';
-import { vectorService } from '../services/vector.service.js';
+import { embeddingService } from '../ai/embedding.service.js';
 import { logger } from '../utils/logger.js';
 
 async function main() {
@@ -28,7 +28,7 @@ async function main() {
     for (const memory of memoriesWithoutEmbeddings) {
       try {
         const textToEmbed = `Title: ${memory.title}\nSummary: ${memory.summary}`;
-        const embedding = await vectorService.generateEmbedding(textToEmbed);
+        const embedding = await embeddingService.generate(textToEmbed);
         
         const embeddingString = `[${embedding.join(',')}]`;
         await prisma.$executeRaw`UPDATE "Memory" SET embedding = ${embeddingString}::vector WHERE id = ${memory.id}`;

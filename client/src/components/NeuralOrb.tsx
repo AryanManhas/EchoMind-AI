@@ -18,10 +18,10 @@ export default function NeuralOrb({ isRecording, audioLevel, isThinking, status,
   const isError = status === 'error';
   const amp = Math.min(audioLevel, 100) / 100;
 
-  const statusText = isError ? 'Connection Failed.' 
-    : effectiveThinking ? 'Extracting memories...' 
+  const statusText = isError ? 'Restoring connection...' 
+    : effectiveThinking ? 'Processing context...' 
     : isActive ? 'Listening...' 
-    : 'Ready for capture.';
+    : 'EchoMind is ready.';
 
   // Generate multi-layered liquid wave paths
   const layers = useMemo(() => {

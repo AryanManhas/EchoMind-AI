@@ -12,3 +12,14 @@
 -keep class com.facebook.react.turbomodule.** { *; }
 
 # Add any project specific keep options here:
+
+
+# Mandatory Proguard Rules for Release Stability
+-keep class com.swmansion.reanimated.** { *; }
+-keep class com.swmansion.gesturehandler.** { *; }
+-keep class com.worklets.** { *; }
+-keep class expo.modules.** { *; }
+-keep class com.facebook.hermes.reactexecutor.** { *; }
+-keep class com.facebook.react.** { *; }
+-keep class kotlin.Metadata { *; }
+-keep class kotlin.reflect.** { *; }

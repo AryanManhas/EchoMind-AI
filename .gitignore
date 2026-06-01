@@ -13,8 +13,14 @@ build/
 dist/
 bin/
 obj/
+.turbo/
+
+# Obsolete root Expo native tree (canonical app is mobile/)
+/android/
 
 # Mobile Artifacts
+.expo/
+mobile/.expo/
 mobile/android/app/build/
 mobile/android/.gradle/
 mobile/ios/Pods/
@@ -29,6 +35,7 @@ mobile/ios/build/
 .env.test.local
 .env.production.local
 server/.env
+mobile/.env
 
 # IDE / OS
 .vscode/
@@ -51,3 +58,6 @@ yarn-debug.log*
 yarn-error.log*
 *.log
 node_modules
+*.tsbuildinfo
+.turbo/
+.code-review-graph/

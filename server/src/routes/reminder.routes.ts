@@ -2,9 +2,13 @@ import { Router, type Request, type Response } from 'express';
 import { requireAuth } from '../auth/middleware.js';
 import { validate } from '../middleware/validate.js';
 import { ReminderService } from '../reminders/reminder.service.js';
-import { UpdateReminderStatusSchema, SnoozeReminderSchema } from '@echomind/types';
+import { UpdateReminderStatusSchema, SnoozeReminderSchema, GetUpcomingRemindersSchema } from '@echomind/types';
+import { rateLimiter } from '../middleware/rate-limiter.js';
 
 const router = Router();
+
+// Apply rate limiting to all reminder endpoints
+router.use(rateLimiter());
 
 // ─── GET /api/reminders ───────────────────────────────────────
 router.get('/', requireAuth, async (req: Request, res: Response) => {
@@ -14,10 +18,10 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
 });
 
 // ─── GET /api/reminders/upcoming ──────────────────────────────
-router.get('/upcoming', requireAuth, async (req: Request, res: Response) => {
+router.get('/upcoming', requireAuth, validate(GetUpcomingRemindersSchema, 'query'), async (req: Request, res: Response) => {
   const userId = req.user!.userId;
-  const windowMinutes = parseInt(req.query.window as string) || 30;
-  const reminders = await ReminderService.getUpcoming(userId, windowMinutes);
+  const { window } = req.query as any;
+  const reminders = await ReminderService.getUpcoming(userId, window);
   res.json({ success: true, data: { reminders } });
 });
 
@@ -50,3 +54,4 @@ router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
 });
 
 export default router;
+

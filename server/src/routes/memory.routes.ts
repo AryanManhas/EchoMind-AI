@@ -81,8 +81,8 @@ router.post('/', requireAuth, validate(CreateMemorySchema), async (req, res) => 
 
   // Create reminder if extracted
   let reminder = null;
-  if (extraction.reminder) {
-    const reminderParsed = ReminderExtractionSchema.safeParse(extraction.reminder);
+  if (extraction.reminders) {
+    const reminderParsed = ReminderExtractionSchema.safeParse(extraction.reminders);
     if (reminderParsed.success) {
       reminder = await ReminderService.createReminder(userId, memory.id, reminderParsed.data);
     }

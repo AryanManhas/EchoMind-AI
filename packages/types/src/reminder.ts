@@ -60,3 +60,11 @@ export const UpdateReminderStatusSchema = z.object({
 export const SnoozeReminderSchema = z.object({
   minutes: z.coerce.number().int().positive().max(1440).default(10),
 });
+
+// ─── Get Upcoming Reminders Query ─────────────────────────────
+export const GetUpcomingRemindersSchema = z.object({
+  window: z.coerce.number().int().positive().default(30),
+});
+
+export type GetUpcomingRemindersRequest = z.infer<typeof GetUpcomingRemindersSchema>;
+

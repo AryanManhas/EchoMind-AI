@@ -31,6 +31,11 @@ export default function TopBar({ isConnected }: TopBarProps) {
           />
         </div>
 
+        {/* Trust Signals */}
+        <div className="hidden md:flex items-center gap-3 border-l border-white/10 pl-4">
+          <span className="text-[10px] uppercase tracking-widest text-emerald-400/60 font-semibold">Local-First</span>
+        </div>
+
         {/* Hardware LED */}
         <HardwareLink isConnected={isConnected} />
       </div>

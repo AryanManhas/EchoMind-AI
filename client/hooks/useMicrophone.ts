@@ -1,9 +1,11 @@
 'use client';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { saveMemoryLocal } from '../lib/persistence';
+import { useNotifications } from '@/src/components/NotificationProvider';
 
 export function useMicrophone(onMemorySaved?: (memory: any) => void) {
   const [active, setActive] = useState(false);
+  const { addNotification } = useNotifications();
   const [audioLevel, setAudioLevel] = useState(0);
   const [isThinking, setIsThinking] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,6 +75,47 @@ export function useMicrophone(onMemorySaved?: (memory: any) => void) {
         } else if (payload.type === 'MEMORY_SAVED') {
           setIsThinking(false);
           saveMemoryLocal(payload.data); // Persistence for mobile
+          
+          // Smart Notification Trigger
+          const mem = payload.data;
+          
+          // 1. Reminder Confidence System (High confidence tasks)
+          if (mem.category === 'Task' && mem.importance > 0.6) {
+            const hasDate = !!mem.nextActionDate;
+            const scheduledTime = hasDate ? new Date(mem.nextActionDate).getTime() : undefined;
+            const actionType = hasDate ? 'reminder' : undefined;
+            
+            // Immediate contextual nudge
+            addNotification({
+              title: "Reminder Scheduled",
+              message: `I'll remind you about: "${mem.title}"`,
+              priority: 'important',
+              actionType,
+              memoryId: mem.id
+            });
+            
+            // Future proactive reminder window (e.g. 15m before)
+            if (scheduledTime && scheduledTime > Date.now()) {
+              addNotification({
+                title: mem.title,
+                message: `Upcoming soon: ${mem.summary}`,
+                priority: mem.importance >= 0.8 ? 'urgent' : 'normal',
+                scheduledFor: scheduledTime - 15 * 60 * 1000, // 15 mins before
+                actionType,
+                memoryId: mem.id
+              });
+            }
+          } else if (mem.category === 'Fact' && mem.importance >= 0.7) {
+            // Meeting / Intelligence Extraction
+            addNotification({
+              title: "Insight Extracted",
+              message: mem.title,
+              priority: 'normal',
+              actionType: 'insight',
+              memoryId: mem.id
+            });
+          }
+
           if (typeof navigator !== 'undefined' && navigator.vibrate) {
             navigator.vibrate([10, 30, 10]); // Haptic signal
           }

@@ -1,16 +1,17 @@
 import { Tabs } from 'expo-router';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
-import { Sparkles, Compass, Bell } from 'lucide-react-native';
+import { Sparkles, Compass, Bell, Settings as SettingsIcon } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { theme } from '../../constants/theme';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
 
   return (
     <Tabs
-      sceneContainerStyle={{ backgroundColor: '#0e0e12' }}
+      sceneContainerStyle={{ backgroundColor: theme.colors.surface }}
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
@@ -19,18 +20,18 @@ export default function TabLayout() {
           left: 0,
           right: 0,
           height: 70 + insets.bottom,
-          backgroundColor: 'rgba(14, 14, 18, 0.92)',
+          backgroundColor: 'rgba(19, 19, 23, 0.94)',
           borderTopWidth: 1,
-          borderTopColor: 'rgba(255, 255, 255, 0.05)',
+          borderTopColor: theme.colors.borderGhost,
           paddingBottom: insets.bottom,
           paddingTop: 8,
           elevation: 0,
         },
-        tabBarActiveTintColor: '#c799ff',
-        tabBarInactiveTintColor: 'rgba(252, 248, 254, 0.35)',
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textTertiary,
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '600',
+          fontWeight: '500',
           letterSpacing: 0.5,
           marginTop: 4,
         },
@@ -42,14 +43,10 @@ export default function TabLayout() {
           title: 'Listen',
           tabBarIcon: ({ color, focused }) => (
             <View style={focused ? styles.activeIconWrap : undefined}>
-              <Sparkles color={focused ? '#0e0e12' : color} size={22} />
-              {focused && (
-                <LinearGradient
-                  colors={['#c799ff', '#a78bfa']}
-                  style={[StyleSheet.absoluteFill, { borderRadius: 12 }]}
-                />
+              <Sparkles color={focused ? theme.colors.primary : color} size={22} />
+              {!!focused && (
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(199, 153, 255, 0.1)', borderRadius: 12 }]} />
               )}
-              {focused && <Sparkles color="#0e0e12" size={22} style={{ position: 'absolute' }} />}
             </View>
           ),
         }}
@@ -64,8 +61,15 @@ export default function TabLayout() {
       <Tabs.Screen
         name="reminders"
         options={{
-          title: 'Alerts',
+          title: 'Reminders',
           tabBarIcon: ({ color }) => <Bell color={color} size={22} />,
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color }) => <SettingsIcon color={color} size={22} />,
         }}
       />
     </Tabs>

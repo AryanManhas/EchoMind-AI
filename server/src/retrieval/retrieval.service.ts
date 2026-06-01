@@ -1,6 +1,6 @@
 import { createLogger } from '../utils/logger.js';
 import prisma from '../db/prisma.js';
-import { embeddingService, EmbeddingService } from '../embeddings/embedding.service.js';
+import { embeddingService, EmbeddingService } from '../ai/embedding.service.js';
 import { CONSTANTS } from '../config/constants.js';
 import { rankMemories, type RankableMemory, type RankedMemory, type RankingWeights } from './ranking.engine.js';
 import type { MemorySearchResult } from '@echomind/types';

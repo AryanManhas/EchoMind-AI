@@ -6,9 +6,10 @@ import {
   updateVoiceSettings, 
   type VoiceSettings, 
   type SensitivityLevel,
-  SILENCE_TIMEOUT_OPTIONS 
+  SILENCE_TIMEOUT_OPTIONS,
+  LANGUAGE_MODE_OPTIONS
 } from '../lib/voiceSettings';
-import { Settings, Volume2, Timer, Zap, BellRing, X } from 'lucide-react-native';
+import { Settings, Volume2, Timer, Zap, BellRing, X, Globe, Shield, Mic } from 'lucide-react-native';
 import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
 
 interface VoiceSettingsPanelProps {
@@ -49,6 +50,52 @@ export function VoiceSettingsPanel({ onClose, onSettingsChanged }: VoiceSettings
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+          {/* Language Mode */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Globe color="#acaab0" size={16} />
+              <Text style={styles.sectionTitle}>Language Mode</Text>
+            </View>
+            <View style={styles.segmentedControl}>
+              {LANGUAGE_MODE_OPTIONS.map((opt) => (
+                <TouchableOpacity
+                  key={opt.value}
+                  onPress={() => handleUpdate({ languageMode: opt.value })}
+                  style={[
+                    styles.segment,
+                    settings.languageMode === opt.value && styles.segmentActive
+                  ]}
+                >
+                  <Text style={[
+                    styles.segmentText,
+                    settings.languageMode === opt.value && styles.segmentTextActive
+                  ]}>
+                    {opt.flag} {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Show Language Indicator */}
+          <View style={styles.section}>
+            <View style={styles.row}>
+              <View style={styles.rowInfo}>
+                <Globe color="#acaab0" size={18} />
+                <View>
+                  <Text style={styles.rowLabel}>Language Indicator</Text>
+                  <Text style={styles.rowSublabel}>Show real-time language</Text>
+                </View>
+              </View>
+              <Switch 
+                value={settings.showLanguageIndicator}
+                onValueChange={(val) => handleUpdate({ showLanguageIndicator: val })}
+                trackColor={{ false: '#222', true: '#c799ff' }}
+                thumbColor="#fff"
+              />
+            </View>
+          </View>
+
           {/* Auto Mode */}
           <View style={styles.section}>
             <View style={styles.row}>
@@ -56,7 +103,7 @@ export function VoiceSettingsPanel({ onClose, onSettingsChanged }: VoiceSettings
                 <Zap color="#4af8e3" size={18} />
                 <View>
                   <Text style={styles.rowLabel}>Auto Voice Detection</Text>
-                  <Text style={styles.rowSublabel}>Start recording automatically when speaking</Text>
+                  <Text style={styles.rowSublabel}>Start recording automatically</Text>
                 </View>
               </View>
               <Switch 
@@ -122,6 +169,44 @@ export function VoiceSettingsPanel({ onClose, onSettingsChanged }: VoiceSettings
             </View>
           </View>
 
+          {/* Privacy Settings */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Shield color="#acaab0" size={16} />
+              <Text style={styles.sectionTitle}>Privacy & Permissions</Text>
+            </View>
+            <View style={styles.row}>
+              <View style={styles.rowInfo}>
+                <Mic color="#acaab0" size={18} />
+                <View>
+                  <Text style={styles.rowLabel}>Require Wake Word</Text>
+                  <Text style={styles.rowSublabel}>Only listen after "EchoMind"</Text>
+                </View>
+              </View>
+              <Switch 
+                value={settings.requireWakeWord}
+                onValueChange={(val) => handleUpdate({ requireWakeWord: val })}
+                trackColor={{ false: '#222', true: '#c799ff' }}
+                thumbColor="#fff"
+              />
+            </View>
+            <View style={[styles.row, { marginTop: 12 }]}>
+              <View style={styles.rowInfo}>
+                <Shield color="#acaab0" size={18} />
+                <View>
+                  <Text style={styles.rowLabel}>Passive Listening</Text>
+                  <Text style={styles.rowSublabel}>Allow constant background capture</Text>
+                </View>
+              </View>
+              <Switch 
+                value={settings.passiveListeningConsent}
+                onValueChange={(val) => handleUpdate({ passiveListeningConsent: val })}
+                trackColor={{ false: '#222', true: '#c799ff' }}
+                thumbColor="#fff"
+              />
+            </View>
+          </View>
+
           {/* Haptic Feedback */}
           <View style={styles.section}>
             <View style={styles.row}>
@@ -157,6 +242,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
+    maxHeight: '80%',
   },
   container: {
     padding: 20,
@@ -183,6 +269,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     gap: 20,
+    paddingBottom: 20,
   },
   section: {
     gap: 12,
@@ -209,6 +296,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     flex: 1,
+    paddingRight: 12,
   },
   rowLabel: {
     color: '#fcf8fe',

@@ -1,38 +1,51 @@
+import 'react-native-gesture-handler';
 import { Stack } from 'expo-router';
-import { StatusBar, View, StyleSheet } from 'react-native';
-import '../global.css';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { StyleSheet } from 'react-native';
+import { useEffect } from 'react';
+import ErrorBoundary from '../components/ErrorBoundary';
 import { useNotifications } from '../hooks/useNotifications';
+import { useTransport } from '../hooks/useTransport';
+
+let globalErrorGuardInstalled = false;
+
+function installGlobalErrorGuard() {
+  if (globalErrorGuardInstalled) return;
+  globalErrorGuardInstalled = true;
+
+  const errorUtils = (globalThis as any).ErrorUtils;
+  const previousHandler = errorUtils?.getGlobalHandler?.();
+  errorUtils?.setGlobalHandler?.((error: Error, isFatal?: boolean) => {
+    if (__DEV__) {
+      console.error('[GlobalError]', error, { isFatal });
+    }
+    previousHandler?.(error, isFatal);
+  });
+}
 
 export default function RootLayout() {
   useNotifications();
+  useTransport();
+
+  useEffect(() => {
+    installGlobalErrorGuard();
+  }, []);
 
   return (
-    <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor="#050505" translucent />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: '#0e0e12' },
-          animation: 'slide_from_right',
-        }}
-      >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen 
-          name="detail" 
-          options={{ 
-            presentation: 'modal',
-            animation: 'slide_from_bottom',
-            contentStyle: { backgroundColor: 'transparent' },
-          }} 
-        />
-      </Stack>
-    </View>
+    <GestureHandlerRootView style={styles.root}>
+      <ErrorBoundary>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="detail" options={{ presentation: 'modal' }} />
+        </Stack>
+      </ErrorBoundary>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#0e0e12',
   },
 });

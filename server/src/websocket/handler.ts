@@ -2,7 +2,8 @@ import { WebSocketServer, WebSocket } from 'ws';
 import type { IncomingMessage } from 'http';
 import { createLogger, withCorrelation } from '../utils/logger.js';
 import { AuthService } from '../auth/auth.service.js';
-import { extractMemory, answerQuery } from '../ai/gemini.service.js';
+import { extractMemory, answerQuery, extractCalendarEvent } from '../ai/gemini.service.js';
+import { CalendarService } from '../services/calendar.service.js';
 import { memoryService } from '../services/memory.service.js';
 import { ReminderService } from '../reminders/reminder.service.js';
 import { retrievalService } from '../retrieval/retrieval.service.js';
@@ -12,6 +13,7 @@ import { detectLanguage, normalizeTranscript } from '../nlp/language.service.js'
 import { isQueryIntent, extractEntities } from '../nlp/entity-extractor.js';
 import { TranscriptSynchronizer } from '../streaming/transcript-sync.js';
 import { enqueueEmbedding } from '../queues/embedding.queue.js';
+import prisma from '../db/prisma.js';
 import type {
   WSAuthMessage,
   WSTextTranscript,
@@ -29,7 +31,11 @@ interface AuthenticatedSocket extends WebSocket {
   user?: AuthUser;
   sessionId: string;
   transcriptSync: TranscriptSynchronizer;
+  rateLimit: { count: number; windowStart: number };
 }
+
+const WS_RATE_LIMIT_WINDOW_MS = 1000;
+const WS_RATE_LIMIT_MAX_MESSAGES = 50;
 
 /**
  * Production WebSocket server with JWT authentication and bilingual support.
@@ -71,27 +77,48 @@ export function setupWebSocket(wss: WebSocketServer) {
   wss.on('close', () => clearInterval(interval));
 
   // ─── Connection Handler ─────────────────────────────────────
-  wss.on('connection', (ws: WebSocket, _req: IncomingMessage) => {
+  wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
     const client = ws as AuthenticatedSocket;
     client.isAlive = true;
     client.sessionId = randomUUID();
     client.transcriptSync = new TranscriptSynchronizer();
+    client.rateLimit = { count: 0, windowStart: Date.now() };
 
     const connLog = withCorrelation(log, client.sessionId);
-    connLog.info('Client connected — awaiting authentication');
 
-    // ── Auth Timeout (5 seconds to authenticate) ──
-    const authTimeout = setTimeout(() => {
-      if (!client.user) {
-        sendMessage(client, { type: 'AUTH_FAIL', message: 'Authentication timeout' });
-        client.close(4001, 'Authentication timeout');
-      }
-    }, 5000);
+    // Retrieve user attached during HTTP upgrade handshake
+    const user = (req as any).user as AuthUser | undefined;
+    if (!user) {
+      connLog.warn('Connection attempt without handshake authentication');
+      sendMessage(client, { type: 'AUTH_FAIL', message: 'Unauthorized' });
+      client.close(4001, 'Unauthorized');
+      return;
+    }
+
+    client.user = user;
+    connLog.info({ userId: user.userId }, 'Client connected — authenticated via handshake');
+
+    // Immediately send AUTH_OK so client knows it is connected and authenticated
+    sendMessage(client, { type: 'AUTH_OK' });
 
     client.on('pong', () => { client.isAlive = true; });
 
     // ─── Message Handler ──────────────────────────────────────
     client.on('message', async (raw: Buffer) => {
+      // ── Rate Limiting ──
+      const now = Date.now();
+      if (now - client.rateLimit.windowStart > WS_RATE_LIMIT_WINDOW_MS) {
+        client.rateLimit.count = 0;
+        client.rateLimit.windowStart = now;
+      }
+      client.rateLimit.count++;
+      
+      if (client.rateLimit.count > WS_RATE_LIMIT_MAX_MESSAGES) {
+        connLog.warn('WebSocket rate limit exceeded');
+        sendMessage(client, { type: 'ERROR', message: 'Rate limit exceeded' });
+        return;
+      }
+
       let data: any;
 
       try {
@@ -101,19 +128,10 @@ export function setupWebSocket(wss: WebSocketServer) {
         return;
       }
 
-      // ── Authentication ──
+      // ── Authentication Fallback / No-Op ──
       if (data.type === 'AUTH') {
-        clearTimeout(authTimeout);
-        try {
-          const authMsg = data as WSAuthMessage;
-          const user = AuthService.verifyAccessToken(authMsg.token);
-          client.user = user;
-          sendMessage(client, { type: 'AUTH_OK' });
-          connLog.info({ userId: user.userId }, 'Client authenticated');
-        } catch (err) {
-          sendMessage(client, { type: 'AUTH_FAIL', message: 'Invalid token' });
-          client.close(4002, 'Invalid token');
-        }
+        connLog.info('Received AUTH message on handshake-authenticated connection');
+        sendMessage(client, { type: 'AUTH_OK' });
         return;
       }
 
@@ -146,7 +164,6 @@ export function setupWebSocket(wss: WebSocketServer) {
 
     // ─── Disconnect ───────────────────────────────────────────
     client.on('close', async () => {
-      clearTimeout(authTimeout);
 
       // Flush any remaining partial transcript before cleanup
       if (client.user) {
@@ -225,62 +242,217 @@ async function handleTextTranscript(
       tasks: entities.tasks,
     }, 'NLP entities extracted');
 
-    // AI memory extraction (bilingual Gemini)
-    const extraction = await extractMemory(text);
-    if (!extraction) {
-      sendMessage(client, {
-        type: 'ERROR',
-        message: 'Could not extract memory from transcript',
-        code: 'AI_PROCESSING_FAILED',
-      });
-      return;
-    }
-
-    // Save memory (embedding generated async via BullMQ)
-    const memory = await memoryService.saveFromExtraction(userId, extraction, [{ speakerId: 'Speaker 0', text, startTime: 0, endTime: 0 }], 'voice');
-
-    // Enqueue embedding generation (background job)
-    await enqueueEmbedding({
-      memoryId: memory.id,
-      title: extraction.title,
-      summary: extraction.summary,
-    });
-
-    // Save reminder if extracted
+    const sessionId = (msg as any).sessionId;
+    let memory;
     let reminder = null;
-    if (extraction.reminder) {
-      const parsed = ReminderExtractionSchema.safeParse(extraction.reminder);
-      if (parsed.success) {
-        const savedReminder = await ReminderService.createReminder(userId, memory.id, parsed.data);
-        reminder = {
-          id: savedReminder.id,
-          title: savedReminder.title,
-          dueAt: savedReminder.dueAt.toISOString(),
-        };
-      }
+    let recentMemory = null;
+
+    if (sessionId) {
+      // Look up if there's a recent memory for this user with the same sessionId
+      const recentMemories = await prisma.memory.findMany({
+        where: { userId, deletedAt: null },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: { segments: true, reminders: true }
+      });
+      recentMemory = recentMemories.find(m => {
+        const meta = m.metadata as any;
+        return meta && meta.sessionId === sessionId;
+      });
     }
 
-    // Send result with language metadata
-    const response: WSMemorySaved = {
-      type: 'MEMORY_SAVED',
-      data: {
-        id: memory.id,
-        title: memory.title,
-        summary: memory.summary,
-        category: memory.category,
-        importance: memory.importance,
-        language: langResult.language,
-        segments: (memory as any).segments,
-      },
-      reminder,
-    };
+    if (recentMemory) {
+      connLog.info({ memoryId: recentMemory.id, sessionId }, 'Continuing existing conversation session');
+      
+      // 1. Create a new transcript segment for this speech turn
+      await prisma.transcriptSegment.create({
+        data: {
+          memoryId: recentMemory.id,
+          speakerId: 'Speaker 0',
+          text,
+          startTime: 0,
+          endTime: 0
+        }
+      });
 
-    sendMessage(client, response);
-    connLog.info({
-      memoryId: memory.id,
-      language: langResult.language,
-      hasReminder: !!reminder,
-    }, 'Memory saved via WebSocket');
+      // 2. Combine all segments of this memory and run Gemini extraction on the consolidated conversation
+      const allSegments = await prisma.transcriptSegment.findMany({
+        where: { memoryId: recentMemory.id },
+        orderBy: { createdAt: 'asc' }
+      });
+      const combinedText = allSegments.map(s => s.text).join(' ');
+
+      const extraction = await extractMemory(combinedText);
+      if (!extraction) {
+        sendMessage(client, {
+          type: 'ERROR',
+          message: 'Could not extract memory from transcript',
+          code: 'AI_PROCESSING_FAILED',
+        });
+        return;
+      }
+
+      // 3. Update the existing memory record with the new consolidated extraction
+      let nextActionDate: Date | null = null;
+      if (extraction.category === 'Task') {
+        nextActionDate = new Date();
+        nextActionDate.setHours(nextActionDate.getHours() + 24);
+      }
+
+      memory = await prisma.memory.update({
+        where: { id: recentMemory.id },
+        data: {
+          title: extraction.title,
+          summary: extraction.summary,
+          category: extraction.category,
+          importance: extraction.importance,
+          tags: extraction.tags || [],
+          nextActionDate,
+        },
+        include: { segments: true, reminders: true }
+      });
+
+      // 4. Enqueue embedding generation for updated title/summary
+      await enqueueEmbedding({
+        memoryId: memory.id,
+        title: extraction.title,
+        summary: extraction.summary,
+      });
+
+      // 5. Update reminder if extracted, or create a new one if not existed
+      if (extraction.reminders) {
+        const parsed = ReminderExtractionSchema.safeParse(extraction.reminders);
+        if (parsed.success) {
+          if (recentMemory.reminders && recentMemory.reminders.length > 0) {
+            const existingReminder = recentMemory.reminders[0];
+            const updatedReminder = await ReminderService.updateReminder(userId, existingReminder.id, parsed.data);
+            reminder = {
+              id: updatedReminder.id,
+              title: updatedReminder.title,
+              dueAt: updatedReminder.dueAt.toISOString(),
+            };
+          } else {
+            const savedReminder = await ReminderService.createReminder(userId, memory.id, parsed.data);
+            reminder = {
+              id: savedReminder.id,
+              title: savedReminder.title,
+              dueAt: savedReminder.dueAt.toISOString(),
+            };
+          }
+        }
+      }
+
+      // Send result with language metadata
+      const response: WSMemorySaved = {
+        type: 'MEMORY_SAVED',
+        data: {
+          id: memory.id,
+          title: memory.title,
+          summary: memory.summary,
+          category: memory.category,
+          importance: memory.importance,
+          language: langResult.language,
+          segments: (memory as any).segments,
+        },
+        reminder,
+      };
+
+      sendMessage(client, response);
+      connLog.info({
+        memoryId: memory.id,
+        language: langResult.language,
+        hasReminder: !!reminder,
+        isContinued: true
+      }, 'Memory updated/continued via WebSocket');
+
+      // ── Calendar Auto-Sync ──
+      syncCalendarEvent(userId, combinedText, extraction.title, connLog)
+        .then((calEvent) => {
+          if (calEvent) {
+            sendMessage(client, {
+              type: 'CALENDAR_EVENT_CREATED',
+              data: calEvent,
+            });
+          }
+        })
+        .catch((err) => connLog.warn({ err }, 'Calendar auto-sync failed (non-fatal)'));
+
+    } else {
+      // New conversation session
+      const extraction = await extractMemory(text);
+      if (!extraction) {
+        sendMessage(client, {
+          type: 'ERROR',
+          message: 'Could not extract memory from transcript',
+          code: 'AI_PROCESSING_FAILED',
+        });
+        return;
+      }
+
+      // Save memory with sessionId stored in metadata
+      memory = await memoryService.saveFromExtraction(
+        userId, 
+        extraction, 
+        [{ speakerId: 'Speaker 0', text, startTime: 0, endTime: 0 }], 
+        'voice',
+        { sessionId }
+      );
+
+      // Enqueue embedding generation (background job)
+      await enqueueEmbedding({
+        memoryId: memory.id,
+        title: extraction.title,
+        summary: extraction.summary,
+      });
+
+      // Save reminder if extracted
+      if (extraction.reminders) {
+        const parsed = ReminderExtractionSchema.safeParse(extraction.reminders);
+        if (parsed.success) {
+          const savedReminder = await ReminderService.createReminder(userId, memory.id, parsed.data);
+          reminder = {
+            id: savedReminder.id,
+            title: savedReminder.title,
+            dueAt: savedReminder.dueAt.toISOString(),
+          };
+        }
+      }
+
+      // Send result with language metadata
+      const response: WSMemorySaved = {
+        type: 'MEMORY_SAVED',
+        data: {
+          id: memory.id,
+          title: memory.title,
+          summary: memory.summary,
+          category: memory.category,
+          importance: memory.importance,
+          language: langResult.language,
+          segments: (memory as any).segments,
+        },
+        reminder,
+      };
+
+      sendMessage(client, response);
+      connLog.info({
+        memoryId: memory.id,
+        language: langResult.language,
+        hasReminder: !!reminder,
+        isContinued: false
+      }, 'New memory saved via WebSocket');
+
+      // ── Calendar Auto-Sync ──
+      syncCalendarEvent(userId, text, extraction.title, connLog)
+        .then((calEvent) => {
+          if (calEvent) {
+            sendMessage(client, {
+              type: 'CALENDAR_EVENT_CREATED',
+              data: calEvent,
+            });
+          }
+        })
+        .catch((err) => connLog.warn({ err }, 'Calendar auto-sync failed (non-fatal)'));
+    }
   } catch (err) {
     connLog.error({ err }, 'Failed to process transcript');
     sendMessage(client, {
@@ -367,3 +539,51 @@ function sendMessage(client: WebSocket, message: any) {
     client.send(JSON.stringify({ ...message, timestamp: Date.now() }));
   }
 }
+
+// ─── Calendar Auto-Sync Helper ────────────────────────────────
+/**
+ * Checks if a transcript contains a calendar event and auto-creates it
+ * in the user's connected Google Calendar.
+ *
+ * Returns the created event or null if:
+ * - Calendar is not configured/connected
+ * - No calendar-worthy event detected
+ * - Confidence is below threshold
+ */
+async function syncCalendarEvent(
+  userId: string,
+  transcript: string,
+  memoryTitle: string,
+  connLog: ReturnType<typeof withCorrelation>,
+) {
+  // Skip if Google Calendar is not configured
+  if (!CalendarService.isConfigured()) return null;
+
+  // Skip if user hasn't connected their calendar
+  const isConnected = await CalendarService.isConnected(userId);
+  if (!isConnected) return null;
+
+  // Ask Gemini to extract calendar event data
+  const extracted = await extractCalendarEvent(transcript, memoryTitle);
+  if (!extracted) return null;
+
+  connLog.info({
+    summary: extracted.summary,
+    confidence: extracted.confidence,
+  }, 'Calendar event detected — auto-creating');
+
+  // Create the event in Google Calendar
+  const event = await CalendarService.createEvent(userId, {
+    summary: extracted.summary,
+    description: extracted.description || `Auto-created by EchoMind from voice memo: "${memoryTitle}"`,
+    startTime: extracted.startTime,
+    endTime: extracted.endTime,
+    location: extracted.location,
+    isAllDay: extracted.isAllDay,
+    timeZone: extracted.timeZone,
+    recurrence: extracted.recurrence,
+  });
+
+  return event;
+}
+

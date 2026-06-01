@@ -6,24 +6,29 @@
   "workspaces": [
     "packages/*",
     "server",
-    "client",
-    "mobile"
+    "client"
   ],
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
     "dev:server": "turbo run dev --filter=echomind-server",
     "dev:client": "turbo run dev --filter=client",
+    "dev:mobile": "npm run start --prefix mobile",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
     "clean": "turbo run clean",
     "db:migrate": "cd server && npx prisma migrate dev",
     "db:generate": "cd server && npx prisma generate",
-    "db:studio": "cd server && npx prisma studio"
+    "db:studio": "cd server && npx prisma studio",
+    "mobile:install": "npm install --prefix mobile",
+    "mobile:android": "npm run android --prefix mobile",
+    "mobile:ios": "npm run ios --prefix mobile"
   },
   "devDependencies": {
-    "ajv": "^8.20.0",
-    "react-native": "^0.74.5",
     "turbo": "^2.5.0"
+  },
+  "overrides": {
+    "@tailwindcss/postcss": "4.3.0",
+    "@tailwindcss/node": "4.3.0"
   }
 }

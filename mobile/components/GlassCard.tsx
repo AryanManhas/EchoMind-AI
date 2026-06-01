@@ -19,7 +19,7 @@ export function GlassCard({
 }: GlassCardProps) {
   return (
     <View 
-      className={`rounded-2xl border border-white/10 overflow-hidden relative ${className}`}
+      className={`rounded-2xl border border-white/5 overflow-hidden relative ${className}`}
       {...props}
     >
       <BlurView 

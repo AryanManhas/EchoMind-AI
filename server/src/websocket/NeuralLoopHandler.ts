@@ -5,10 +5,12 @@ import FormData from 'form-data';
 import { performance } from 'perf_hooks';
 import { extractMemory } from '../ai/gemini.service.js';
 import { MemoryRepository } from '../repositories/MemoryRepository.js';
-import { TranscriptionService } from '../services/TranscriptionService.js';
+import { TranscriptionService } from '../ai/transcription.service.js';
 import { ReminderService } from '../services/ReminderService.js';
 import { logger } from '../utils/logger.js';
 import { env } from '../config/env.js';
+import { AuthService } from '../auth/auth.service.js';
+import type { AuthUser } from '@echomind/types';
 
 const PLACEHOLDER_USER_ID = '00000000-0000-0000-0000-000000000000';
 
@@ -32,6 +34,18 @@ export function setupNeuralLoop(wss: WebSocketServer) {
 
   wss.on('connection', (ws: any) => {
     ws.isAlive = true;
+    let isAuthenticated = false;
+    let user: AuthUser | undefined;
+    let messageCount = 0;
+    let windowStart = Date.now();
+
+    const authTimeout = setTimeout(() => {
+      if (!isAuthenticated) {
+        ws.send(JSON.stringify({ type: 'AUTH_FAIL', message: 'Authentication timeout' }));
+        ws.close(4001, 'Authentication timeout');
+      }
+    }, 5000);
+
     ws.on('pong', heartbeat);
 
     const correlationId = Math.random().toString(36).substring(7);
@@ -53,15 +67,47 @@ export function setupNeuralLoop(wss: WebSocketServer) {
     let isTranscribingPartial = false;
 
     ws.on('message', (message: Buffer) => {
-      // Intercept synthetic mobile ping
-      if (message.toString() === '{"type":"PING"}') {
-        ws.send(JSON.stringify({ type: 'PONG' }));
+      // ── Rate Limiting ──
+      const now = Date.now();
+      if (now - windowStart > 1000) {
+        messageCount = 0;
+        windowStart = now;
+      }
+      messageCount++;
+      if (messageCount > 50) {
+        logger.warn(`[WARN] NeuralLoop rate limit exceeded [${correlationId}]`);
+        ws.send(JSON.stringify({ type: 'ERROR', message: 'Rate limit exceeded' }));
         return;
       }
 
-      // Handle finalized text from mobile STT
+      // Handle auth and JSON messages
       try {
         const data = JSON.parse(message.toString());
+        
+        if (data.type === 'AUTH') {
+          clearTimeout(authTimeout);
+          try {
+            user = AuthService.verifyAccessToken(data.token);
+            isAuthenticated = true;
+            ws.send(JSON.stringify({ type: 'AUTH_OK' }));
+            logger.info(`[INTEL] NeuralLoop Authenticated [${correlationId}] User: ${user.userId}`);
+          } catch (err) {
+            ws.send(JSON.stringify({ type: 'AUTH_FAIL', message: 'Invalid token' }));
+            ws.close(4002, 'Invalid token');
+          }
+          return;
+        }
+
+        if (!isAuthenticated) {
+          ws.send(JSON.stringify({ type: 'AUTH_FAIL', message: 'Not authenticated' }));
+          return;
+        }
+
+        if (data.type === 'PING') {
+          ws.send(JSON.stringify({ type: 'PONG' }));
+          return;
+        }
+
         if (data.type === 'TEXT_TRANSCRIPT') {
           const transcript = data.text?.trim();
           if (!transcript || transcript.length < 5) return; // Ultra-fast trigger permissive filter
@@ -72,20 +118,35 @@ export function setupNeuralLoop(wss: WebSocketServer) {
 
           extractMemory(transcript).then(async (memoryAnalysis) => {
             if (memoryAnalysis) {
-              const savedMemory = await memoryRepo.saveExtractedMemory(memoryAnalysis, [{ speakerId: 'Speaker 0', text: transcript, startTime: 0, endTime: 0 }], PLACEHOLDER_USER_ID);
+              const activeUserId = user?.userId || PLACEHOLDER_USER_ID;
+              const savedMemory = await memoryRepo.saveExtractedMemory(memoryAnalysis, [{ speakerId: 'Speaker 0', text: transcript, startTime: 0, endTime: 0 }], activeUserId);
               
-              let savedReminder = null;
-              if (memoryAnalysis.reminder) {
-                savedReminder = await ReminderService.createReminder(PLACEHOLDER_USER_ID, savedMemory.id, memoryAnalysis.reminder);
+              let savedReminders: any[] = [];
+              if (memoryAnalysis.reminders && memoryAnalysis.reminders.length > 0) {
+                for (const rem of memoryAnalysis.reminders) {
+                  try {
+                    const saved = await ReminderService.createReminder(activeUserId, savedMemory.id, {
+                      title: rem.description,
+                      description: rem.description,
+                      dueAt: rem.due_date,
+                      category: 'work',
+                      priority: 'medium',
+                      isCritical: false
+                    });
+                    savedReminders.push(saved);
+                  } catch (e) {
+                    logger.error({ err: e }, 'Failed to save reminder');
+                  }
+                }
               }
 
               ws.send(JSON.stringify({ 
                 type: 'MEMORY_SAVED', 
                 data: savedMemory, 
-                reminder: savedReminder,
+                reminders: savedReminders,
                 correlationId 
               }));
-              logger.info(`[AUDIT] Text Processed -> Memory Saved [${correlationId}] ${savedReminder ? '+ Reminder Created' : ''}`);
+              logger.info(`[AUDIT] Text Processed -> Memory Saved [${correlationId}] ${savedReminders.length > 0 ? '+ Reminders Created' : ''}`);
             }
           }).catch(err => {
             logger.error({ err }, `[ERROR] Text processing failed [${correlationId}]`);
@@ -167,22 +228,37 @@ export function setupNeuralLoop(wss: WebSocketServer) {
                 logger.info(`[INTEL] Memory Classified as: ${memoryAnalysis.category.toUpperCase()} | Importance: ${importanceLabel}`);
 
                 const saveStartTime = performance.now();
-                const savedMemory = await memoryRepo.saveExtractedMemory(memoryAnalysis, [{ speakerId: 'Speaker 0', text: transcript, startTime: 0, endTime: 0 }], PLACEHOLDER_USER_ID);
+                const activeUserId = user?.userId || PLACEHOLDER_USER_ID;
+                const savedMemory = await memoryRepo.saveExtractedMemory(memoryAnalysis, [{ speakerId: 'Speaker 0', text: transcript, startTime: 0, endTime: 0 }], activeUserId);
                 
-                let savedReminder = null;
-                if (memoryAnalysis.reminder) {
-                  savedReminder = await ReminderService.createReminder(PLACEHOLDER_USER_ID, savedMemory.id, memoryAnalysis.reminder);
+                let savedReminders: any[] = [];
+                if (memoryAnalysis.reminders && memoryAnalysis.reminders.length > 0) {
+                  for (const rem of memoryAnalysis.reminders) {
+                    try {
+                      const saved = await ReminderService.createReminder(activeUserId, savedMemory.id, {
+                        title: rem.description,
+                        description: rem.description,
+                        dueAt: rem.due_date,
+                        category: 'work',
+                        priority: 'medium',
+                        isCritical: false
+                      });
+                      savedReminders.push(saved);
+                    } catch (e) {
+                      logger.error({ err: e }, 'Failed to save reminder');
+                    }
+                  }
                 }
 
                 const saveTime = performance.now() - saveStartTime;
 
                 // Required telemetry log
-                logger.info(`[AUDIT] Start -> Transcript (${whisperTime.toFixed(0)}ms) -> Extraction (${geminiTime.toFixed(0)}ms) -> DB Write (Success) ${savedReminder ? '+ Reminder' : ''}`);
+                logger.info(`[AUDIT] Start -> Transcript (${whisperTime.toFixed(0)}ms) -> Extraction (${geminiTime.toFixed(0)}ms) -> DB Write (Success) ${savedReminders.length > 0 ? '+ Reminders' : ''}`);
 
                 ws.send(JSON.stringify({ 
                   type: 'MEMORY_SAVED', 
                   data: savedMemory,
-                  reminder: savedReminder
+                  reminders: savedReminders
                 }));
               }
             }

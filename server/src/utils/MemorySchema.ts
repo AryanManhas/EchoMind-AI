@@ -1,6 +1,10 @@
 import { z } from 'zod';
 
-export const MemoryCategoryEnum = z.enum(['Task', 'Fact', 'Idea']);
+export const MemoryCategoryEnum = z.enum([
+  'Task', 'Fact', 'Idea', 
+  'conversational', 'reminder', 'meeting_action', 
+  'personal_fact', 'ephemeral_context', 'semantic_observation'
+]);
 
 export const ReminderSchema = z.object({
   title: z.string().min(1, "Reminder title is required"),
@@ -15,9 +19,18 @@ export const ReminderSchema = z.object({
 export const MemoryExtractionSchema = z.object({
   title: z.string().min(1, "Title is required").describe("A concise, declarative title."),
   summary: z.string().min(1, "Summary is required").describe("A concise, present-tense, actionable summary in Second Brain style."),
-  category: MemoryCategoryEnum.describe("Must be exactly 'Task', 'Fact', or 'Idea'."),
+  projects: z.array(z.string()).optional().default([]),
+  participants: z.array(z.string()).optional().default([]),
+  category: MemoryCategoryEnum,
   importance: z.number().min(0).max(1).describe("Importance score from 0.0 to 1.0."),
-  reminder: ReminderSchema.optional().describe("Set if the user explicitly mentions a time-based task, appointment, or deadline.")
+  reminderConfidence: z.number().min(0).max(1).optional().default(0),
+  taskConfidence: z.number().min(0).max(1).optional().default(0),
+  conversationalConfidence: z.number().min(0).max(1).optional().default(0),
+  meetingConfidence: z.number().min(0).max(1).optional().default(0),
+  reminders: z.array(z.object({
+    description: z.string(),
+    due_date: z.string().describe("ISO8601_string")
+  })).optional().default([]),
 });
 
 export type MemoryExtraction = z.infer<typeof MemoryExtractionSchema>;

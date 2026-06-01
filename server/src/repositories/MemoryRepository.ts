@@ -1,6 +1,6 @@
 import prisma from '../lib/prisma.js';
 import { Prisma } from '@prisma/client';
-import { vectorService } from '../services/vector.service.js';
+import { embeddingService } from '../ai/embedding.service.js';
 import { logger } from '../utils/logger.js';
 
 export class MemoryRepository {
@@ -44,7 +44,7 @@ export class MemoryRepository {
     // 2. Generate embedding for title + summary
     try {
       const textToEmbed = `Title: ${data.title}\nSummary: ${data.summary}`;
-      const embedding = await vectorService.generateEmbedding(textToEmbed);
+      const embedding = await embeddingService.generate(textToEmbed);
       
       // 3. Update memory with embedding using raw SQL
       const embeddingString = `[${embedding.join(',')}]`;
@@ -66,7 +66,7 @@ export class MemoryRepository {
   async searchSimilarMemories(queryText: string, limit: number = 5) {
     try {
       // 1. Generate embedding for search query
-      const queryEmbedding = await vectorService.generateEmbedding(queryText);
+      const queryEmbedding = await embeddingService.generate(queryText);
       const embeddingString = `[${queryEmbedding.join(',')}]`;
 
       // 2. Execute vector similarity search using Cosine distance (<=>)
@@ -94,4 +94,3 @@ export class MemoryRepository {
     }
   }
 }
-

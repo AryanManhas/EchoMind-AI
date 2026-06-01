@@ -8,3 +8,5 @@ export * from './reminder.js';
 export * from './auth.js';
 export * from './websocket.js';
 export * from './api.js';
+export * from './calendar.js';
+

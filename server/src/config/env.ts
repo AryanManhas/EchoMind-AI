@@ -2,8 +2,12 @@ import { z } from 'zod';
 import dotenv from 'dotenv';
 dotenv.config();
 
+const booleanFlag = z.string().default('false').transform((s) => s === 'true');
+const optionalSecret = z.string().optional().default('');
+
 // ─── Environment Schema ───────────────────────────────────────
-// Validated at startup. Missing or invalid vars → crash immediately.
+// Validated at startup. Minimal local mode only requires PORT, NODE_ENV,
+// and GEMINI_API_KEY/GOOGLE_API_KEY.
 // ────────────────────────────────────────────────────────────────
 
 const envSchema = z.object({
@@ -12,21 +16,29 @@ const envSchema = z.object({
   PORT: z.string().default('8080'),
   CORS_ORIGIN: z.string().default('*'),
 
-  // Process Type (Render)
-  PROCESS_TYPE: z.enum(['web', 'worker', 'all']).default('all'),
+  // Process Type (legacy enterprise mode)
+  PROCESS_TYPE: z.enum(['web', 'worker', 'all']).default('web'),
+
+  // Enterprise feature gates. All disabled by default for local-first runtime.
+  ENABLE_DATABASE: booleanFlag,
+  ENABLE_REDIS: booleanFlag,
+  ENABLE_QUEUES: booleanFlag,
+  ENABLE_WEBSOCKET: booleanFlag,
+  ENABLE_SCHEDULER: booleanFlag,
 
   // Database
-  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
+  DATABASE_URL: optionalSecret,
 
   // Redis (for BullMQ)
-  REDIS_URL: z.string().default('redis://localhost:6379'),
+  REDIS_URL: optionalSecret,
 
   // AI
-  GOOGLE_API_KEY: z.string().min(1, 'Google API Key is required'),
+  GEMINI_API_KEY: optionalSecret,
+  GOOGLE_API_KEY: optionalSecret,
 
   // Auth
-  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
-  JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET must be at least 32 characters'),
+  JWT_SECRET: z.string().default('development-jwt-secret-change-before-production'),
+  JWT_REFRESH_SECRET: z.string().default('development-refresh-secret-change-before-production'),
   JWT_EXPIRY: z.string().default('15m'),
   JWT_REFRESH_EXPIRY: z.string().default('7d'),
 
@@ -37,7 +49,12 @@ const envSchema = z.object({
   DEMO_MODE: z.string().default('false').transform((s) => s === 'true'),
 
   // Deepgram
-  DEEPGRAM_API_KEY: z.string().min(1, 'Deepgram API Key is required'),
+  DEEPGRAM_API_KEY: optionalSecret,
+
+  // Google Calendar (optional — calendar features disabled if not set)
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_REDIRECT_URI: z.string().optional(),
 });
 
 const _env = envSchema.safeParse(process.env);
@@ -48,5 +65,35 @@ if (!_env.success) {
   process.exit(1);
 }
 
-export const env = _env.data;
-export type Env = z.infer<typeof envSchema>;
+// ─── Strict Production Guards ─────────────────────────────────
+const data = {
+  ..._env.data,
+  GOOGLE_API_KEY: _env.data.GEMINI_API_KEY || _env.data.GOOGLE_API_KEY,
+};
+
+if (data.NODE_ENV === 'production') {
+  if (!data.GOOGLE_API_KEY) {
+    console.error('❌ GEMINI_API_KEY or GOOGLE_API_KEY is required in production.');
+    process.exit(1);
+  }
+
+  if (data.ENABLE_REDIS && !data.REDIS_URL) {
+    console.error('❌ REDIS_URL is required when ENABLE_REDIS=true.');
+    process.exit(1);
+  }
+  if (data.ENABLE_REDIS && (data.REDIS_URL.includes('localhost') || data.REDIS_URL.includes('127.0.0.1'))) {
+    console.error('❌ REDIS_URL cannot point to localhost in production.');
+    process.exit(1);
+  }
+  if (data.ENABLE_DATABASE && !data.DATABASE_URL) {
+    console.error('❌ DATABASE_URL is required when ENABLE_DATABASE=true.');
+    process.exit(1);
+  }
+  if (data.ENABLE_DATABASE && (data.DATABASE_URL.includes('localhost') || data.DATABASE_URL.includes('127.0.0.1'))) {
+    console.error('❌ DATABASE_URL cannot point to localhost in production.');
+    process.exit(1);
+  }
+}
+
+export const env = data;
+export type Env = typeof env;

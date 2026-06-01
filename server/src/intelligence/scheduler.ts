@@ -23,6 +23,14 @@ export function startScheduler(): void {
 
   schedulerInterval = setInterval(async () => {
     try {
+      // 1. Verify Database Reachability (Fail Fast)
+      try {
+        await prisma.$queryRaw`SELECT 1`;
+      } catch (dbErr) {
+        log.warn({ err: dbErr }, 'Database unreachable during scheduler tick. Skipping.');
+        return; // Skip this tick, wait for next one
+      }
+
       // Get all active users (users with at least one session)
       const activeUsers = await prisma.session.findMany({
         select: { userId: true },

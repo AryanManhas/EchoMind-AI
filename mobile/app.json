@@ -6,30 +6,61 @@
     "scheme": "echomind",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
+    "updates": {
+      "enabled": false,
+      "checkAutomatically": "NEVER",
+      "fallbackToCacheTimeout": 0
+    },
     "android": {
       "package": "com.aryanmanhas.echomind",
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.BLUETOOTH_CONNECT",
         "android.permission.BLUETOOTH_SCAN",
-        "android.permission.MODIFY_AUDIO_SETTINGS"
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR"
       ]
     },
     "plugins": [
+      "expo-dev-client",
       "expo-router",
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "EchoMind needs access to your calendar to schedule reminders.",
+          "remindersPermission": "EchoMind needs access to your reminders to manage tasks."
+        }
+      ],
+      "expo-notifications",
       [
         "expo-speech-recognition",
         {
           "microphonePermission": "EchoMind needs access to your microphone to transcribe your voice."
         }
-      ]
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "kotlinVersion": "1.9.23",
+            "minSdkVersion": 24
+          }
+        }
+      ],
+      "./plugins/withAndroidReleaseFixes.js"
     ],
     "extra": {
-      "router": {},
+      "router": {
+        "origin": false
+      },
       "eas": {
-        "projectId": "e183b778-c783-4445-8cd6-8ae59ed24e8c"
+        "projectId": "ddf26587-11cf-4ba2-9b5b-0c62a09b5a59"
       }
-    }
+    },
+    "owner": "aryan3369"
   }
 }
+

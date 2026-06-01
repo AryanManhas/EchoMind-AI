@@ -122,12 +122,20 @@ export function MemoryVault() {
           </div>
         ) : memories.length === 0 ? (
           <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="absolute inset-0 flex flex-col items-center justify-center text-neutral-500"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute inset-0 flex flex-col items-center justify-center text-neutral-400"
           >
-            <Layers className="w-12 h-12 mb-4 opacity-20" />
-            <p>No memories found in this category.</p>
+            <div className="w-16 h-16 rounded-3xl bg-white/5 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(255,255,255,0.02)]">
+              <Layers className="w-8 h-8 opacity-40" />
+            </div>
+            <p className="text-[15px] font-medium text-white/40 tracking-wide">
+              EchoMind will keep track of important moments.
+            </p>
+            <p className="text-sm text-white/20 mt-2">
+              Your saved memories will appear here.
+            </p>
           </motion.div>
         ) : (
           <motion.div 

@@ -1,7 +1,11 @@
 import { z } from 'zod';
 
 // ─── Memory Categories ────────────────────────────────────────
-export const MemoryCategoryEnum = z.enum(['Task', 'Fact', 'Idea']);
+export const MemoryCategoryEnum = z.enum([
+  'Task', 'Fact', 'Idea', 
+  'conversational', 'reminder', 'meeting_action', 
+  'personal_fact', 'ephemeral_context', 'semantic_observation'
+]);
 export type MemoryCategory = z.infer<typeof MemoryCategoryEnum>;
 
 // ─── Memory Source ────────────────────────────────────────────
@@ -15,15 +19,16 @@ export const MemoryExtractionSchema = z.object({
   category: MemoryCategoryEnum,
   importance: z.number().min(0).max(1),
   tags: z.array(z.string()).optional().default([]),
-  reminder: z.object({
-    title: z.string().min(1),
-    description: z.string().optional(),
-    dueAt: z.string().describe('ISO 8601 date string'),
-    category: z.string(),
-    priority: z.enum(['low', 'medium', 'high']).default('medium'),
-    repeatRule: z.string().optional().nullable(),
-    isCritical: z.boolean().default(false),
-  }).optional(),
+  projects: z.array(z.string()).optional().default([]),
+  participants: z.array(z.string()).optional().default([]),
+  reminderConfidence: z.number().min(0).max(1).optional().default(0),
+  taskConfidence: z.number().min(0).max(1).optional().default(0),
+  conversationalConfidence: z.number().min(0).max(1).optional().default(0),
+  meetingConfidence: z.number().min(0).max(1).optional().default(0),
+  reminders: z.array(z.object({
+    description: z.string().min(1),
+    due_date: z.string().describe('ISO 8601 date string'),
+  })).optional().default([]),
 });
 
 export type MemoryExtraction = z.infer<typeof MemoryExtractionSchema>;

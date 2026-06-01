@@ -19,6 +19,15 @@
     },
     "production": {
       "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://echomind-api.onrender.com",
+        "EXPO_PUBLIC_WS_URL": "wss://echomind-api.onrender.com"
+      }
+    },
+    "production-aab": {
+      "android": {
         "buildType": "app-bundle"
       },
       "env": {

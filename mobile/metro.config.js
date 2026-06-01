@@ -2,23 +2,23 @@ const { getDefaultConfig } = require('expo/metro-config');
 const { withNativeWind } = require('nativewind/metro');
 const path = require('path');
 
+/**
+ * Mobile-only Metro config. Expo app lives solely under mobile/.
+ * Do not resolve React/RN from the monorepo root (Next.js uses React 19).
+ */
 const projectRoot = __dirname;
-const workspaceRoot = path.resolve(projectRoot, '..');
 
 const config = getDefaultConfig(projectRoot);
 
-// 1. Watch all files within the monorepo
-config.watchFolders = [workspaceRoot];
+// Watch only this app tree (not parent client/server workspaces).
+config.watchFolders = [projectRoot];
 
-// 2. Let Metro know where to resolve packages and in what order
-config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, 'node_modules'),
-  path.resolve(workspaceRoot, 'node_modules'),
-];
-config.resolver.unstable_enableSymlinks = true;
-config.resolver.unstable_enablePackageExports = true;
+// Single resolver root: mobile/node_modules only.
+config.resolver.nodeModulesPaths = [path.resolve(projectRoot, 'node_modules')];
 
-// 3. Exclude heavy or unnecessary folders from Metro
+// Expo default; avoids non-standard hierarchical lookup that breaks doctor checks.
+config.resolver.disableHierarchicalLookup = false;
+
 config.resolver.blockList = [
   /.*\.code-review-graph\/.*/,
   /.*\.git\/.*/,
@@ -29,4 +29,3 @@ config.resolver.blockList = [
 ];
 
 module.exports = withNativeWind(config, { input: './global.css' });
-

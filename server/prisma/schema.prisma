@@ -23,6 +23,25 @@ model User {
   memories   Memory[]
   reminders  Reminder[]
   sessions   Session[]
+  calendarIntegrations CalendarIntegration[]
+}
+
+// ─── Calendar Integration ─────────────────────────────────────
+model CalendarIntegration {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider     String   @default("google") // "google", "outlook", etc.
+  accessToken  String
+  refreshToken String
+  tokenExpiry  DateTime
+  calendarId   String   @default("primary") // Which calendar to write to
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, provider])
+  @@index([userId])
 }
 
 // ─── Session ──────────────────────────────────────────────────

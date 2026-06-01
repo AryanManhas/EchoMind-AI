@@ -4,6 +4,7 @@
  * Uses in-memory cache with TODO for AsyncStorage persistence.
  */
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -47,9 +48,9 @@ export const DEFAULT_VOICE_SETTINGS: VoiceSettings = {
 // expo-speech-recognition volumechange values are typically -2 to 10 on Android.
 
 export const SENSITIVITY_THRESHOLDS: Record<SensitivityLevel, number> = {
-  high: 0.05,   // Very sensitive — picks up soft speech
-  medium: 0.15, // Balanced — normal speaking volume
-  low: 0.30,    // Conservative — only loud/clear speech
+  high: 0.02,   // Extremely sensitive — picks up whisper/very quiet speech
+  medium: 0.08, // Balanced/Premium — captures soft spoken and ambient speech easily
+  low: 0.20,    // Conservative — normal to loud speaking volume
 };
 
 // ─── Silence Timeout Presets ────────────────────────────────────
@@ -90,27 +91,49 @@ let _cachedSettings: VoiceSettings = { ...DEFAULT_VOICE_SETTINGS };
 let _initialized = false;
 
 /**
- * Load settings. In a real production app, this would use AsyncStorage.
- * For now, we use a simple in-memory cache that resets on app restart.
- * TODO: Add @react-native-async-storage/async-storage for true persistence.
+ * Initialize settings from AsyncStorage on app startup.
+ */
+export async function initVoiceSettings(): Promise<void> {
+  if (_initialized) return;
+  try {
+    const json = await AsyncStorage.getItem(STORAGE_KEY);
+    if (json) {
+      _cachedSettings = { ...DEFAULT_VOICE_SETTINGS, ...JSON.parse(json) };
+    }
+  } catch (error) {
+    console.error('Failed to load voice settings:', error);
+  } finally {
+    _initialized = true;
+  }
+}
+
+/**
+ * Load settings. 
+ * Reads synchronously from cache.
  */
 export function getVoiceSettings(): VoiceSettings {
   return { ..._cachedSettings };
 }
 
 /**
- * Update voice settings.
+ * Update voice settings and persist to AsyncStorage.
  */
 export function updateVoiceSettings(partial: Partial<VoiceSettings>): VoiceSettings {
   _cachedSettings = { ..._cachedSettings, ...partial };
+  AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(_cachedSettings)).catch(err => {
+    console.error('Failed to save voice settings:', err);
+  });
   return { ..._cachedSettings };
 }
 
 /**
- * Reset to defaults.
+ * Reset to defaults and clear from storage.
  */
 export function resetVoiceSettings(): VoiceSettings {
   _cachedSettings = { ...DEFAULT_VOICE_SETTINGS };
+  AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(_cachedSettings)).catch(err => {
+    console.error('Failed to save voice settings:', err);
+  });
   return { ..._cachedSettings };
 }
 

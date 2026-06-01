@@ -1,10 +1,12 @@
 import { createLogger } from '../utils/logger.js';
 import prisma from '../db/prisma.js';
-import { embeddingService, EmbeddingService } from '../embeddings/embedding.service.js';
+import { embeddingService, EmbeddingService } from '../ai/embedding.service.js';
 import { detectLanguage } from '../nlp/language.service.js';
 import type { MemoryExtraction } from '@echomind/types';
 
 const log = createLogger('memory-service');
+
+const localMemories: any[] = [];
 
 /**
  * Core memory service — CRUD operations and embedding generation.
@@ -23,6 +25,25 @@ export class MemoryService {
     sourceType: 'voice' | 'text' | 'import' | 'meeting' = 'voice',
     metadata: any = {}
   ) {
+    if ((global as any).__dbFallback) {
+      const memory = {
+        id: Math.random().toString(36).substring(7),
+        userId,
+        title: extraction.title,
+        summary: extraction.summary,
+        category: extraction.category,
+        importance: extraction.importance,
+        sourceType,
+        language: 'en',
+        tags: extraction.tags || [],
+        metadata,
+        createdAt: new Date(),
+        segments,
+        reminders: []
+      };
+      localMemories.push(memory);
+      return memory;
+    }
     let nextActionDate: Date | null = null;
     if (extraction.category === 'Task') {
       nextActionDate = new Date();
@@ -72,6 +93,13 @@ export class MemoryService {
     userId: string,
     options?: { category?: string; limit?: number; offset?: number },
   ) {
+    if ((global as any).__dbFallback) {
+      let filtered = localMemories.filter(m => m.userId === userId && !m.deletedAt);
+      if (options?.category && options.category !== 'All') {
+        filtered = filtered.filter(m => m.category === options.category);
+      }
+      return filtered.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    }
     const where: any = { userId, deletedAt: null };
     if (options?.category && options.category !== 'All') {
       where.category = options.category;
@@ -93,6 +121,9 @@ export class MemoryService {
    * Get a single memory by ID (with ownership check).
    */
   async getById(userId: string, memoryId: string) {
+    if ((global as any).__dbFallback) {
+      return localMemories.find(m => m.id === memoryId && m.userId === userId && !m.deletedAt) || null;
+    }
     return prisma.memory.findFirst({
       where: { id: memoryId, userId, deletedAt: null },
       include: { 
@@ -106,6 +137,11 @@ export class MemoryService {
    * Soft delete a memory.
    */
   async softDelete(userId: string, memoryId: string) {
+    if ((global as any).__dbFallback) {
+      const memory = localMemories.find(m => m.id === memoryId && m.userId === userId);
+      if (memory) memory.deletedAt = new Date();
+      return { count: memory ? 1 : 0 };
+    }
     return prisma.memory.updateMany({
       where: { id: memoryId, userId },
       data: { deletedAt: new Date() },
@@ -116,6 +152,7 @@ export class MemoryService {
    * Re-extract memory from stored transcript.
    */
   async retryExtraction(userId: string, memoryId: string, extractFn: (text: string) => Promise<MemoryExtraction | null>) {
+    if ((global as any).__dbFallback) return null;
     const memory = await prisma.memory.findFirst({
       where: { id: memoryId, userId, deletedAt: null },
       include: { segments: true }

@@ -1,0 +1,24 @@
+#!/bin/sh
+# Pre-commit hook to scan for committed secrets and block committing .env files
+
+# Check for staged .env files
+staged_env_files=$(git diff --cached --name-only | grep -E '\.env$|\.env\.')
+if [ -n "$staged_env_files" ]; then
+  echo "❌ ERROR: You are attempting to commit environment configuration files:"
+  echo "$staged_env_files"
+  echo "Please remove them from staging before committing."
+  exit 1
+fi
+
+# Scan staged code additions for potential raw API keys or secrets
+# Filters out env.example and typical configuration placeholders
+secrets_detected=$(git diff --cached | grep -E '^\+.*(AIzaSy[A-Za-z0-9_\-]{35}|[a-zA-Z0-9_\-]{32,}|sk-[a-zA-Z0-9]{48})' | grep -v -E 'EXAMPLE|example|placeholder|YOUR_|your_|API_KEY_HERE|SECRET_HERE' | grep -E '(KEY|SECRET|PASSWORD|TOKEN|JWT|API_KEY|DEEPGRAM|GEMINI)\s*[:=]\s*["'\''\s]*[a-zA-Z0-9_\-]{16,}')
+
+if [ -n "$secrets_detected" ]; then
+  echo "❌ ERROR: Potential hardcoded secret or API key detected in changes:"
+  echo "$secrets_detected"
+  echo "Please remove the secret and use environment variables."
+  exit 1
+fi
+
+exit 0
