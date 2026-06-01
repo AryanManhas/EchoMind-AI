@@ -6,7 +6,24 @@ import type { MemoryExtraction } from '@echomind/types';
 
 const log = createLogger('memory-service');
 
-const localMemories: any[] = [];
+interface LocalMemory {
+  id: string;
+  userId: string;
+  title: string;
+  summary: string;
+  category: string;
+  importance: number;
+  sourceType: string;
+  language: string;
+  tags: string[];
+  metadata: Record<string, unknown>;
+  createdAt: Date;
+  deletedAt?: Date;
+  segments: Array<{ speakerId: string; text: string; startTime: number; endTime: number }>;
+  reminders: unknown[];
+}
+
+const localMemories: LocalMemory[] = [];
 
 /**
  * Core memory service — CRUD operations and embedding generation.
@@ -51,7 +68,7 @@ export class MemoryService {
     }
 
     // Combine segment text for language detection if available, else use title
-    const combinedText = segments.length > 0 ? segments.map(s => s.text).join(' ') : extraction.title;
+    const combinedText = segments.length > 0 ? segments.map((s: { text: string }) => s.text).join(' ') : extraction.title;
     const langResult = detectLanguage(combinedText);
 
     // 1. Save memory without embedding
@@ -94,11 +111,11 @@ export class MemoryService {
     options?: { category?: string; limit?: number; offset?: number },
   ) {
     if ((global as any).__dbFallback) {
-      let filtered = localMemories.filter(m => m.userId === userId && !m.deletedAt);
+      let filtered = localMemories.filter((m: LocalMemory) => m.userId === userId && !m.deletedAt);
       if (options?.category && options.category !== 'All') {
-        filtered = filtered.filter(m => m.category === options.category);
+        filtered = filtered.filter((m: LocalMemory) => m.category === options.category);
       }
-      return filtered.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      return filtered.sort((a: LocalMemory, b: LocalMemory) => b.createdAt.getTime() - a.createdAt.getTime());
     }
     const where: any = { userId, deletedAt: null };
     if (options?.category && options.category !== 'All') {
@@ -122,7 +139,7 @@ export class MemoryService {
    */
   async getById(userId: string, memoryId: string) {
     if ((global as any).__dbFallback) {
-      return localMemories.find(m => m.id === memoryId && m.userId === userId && !m.deletedAt) || null;
+      return localMemories.find((m: LocalMemory) => m.id === memoryId && m.userId === userId && !m.deletedAt) || null;
     }
     return prisma.memory.findFirst({
       where: { id: memoryId, userId, deletedAt: null },
@@ -138,7 +155,7 @@ export class MemoryService {
    */
   async softDelete(userId: string, memoryId: string) {
     if ((global as any).__dbFallback) {
-      const memory = localMemories.find(m => m.id === memoryId && m.userId === userId);
+      const memory = localMemories.find((m: LocalMemory) => m.id === memoryId && m.userId === userId);
       if (memory) memory.deletedAt = new Date();
       return { count: memory ? 1 : 0 };
     }
@@ -160,7 +177,7 @@ export class MemoryService {
 
     if (!memory || (!memory.segments || memory.segments.length === 0)) return null;
 
-    const combinedText = memory.segments.map(s => s.text).join(' ');
+    const combinedText = memory.segments.map((s: { text: string }) => s.text).join(' ');
     const extraction = await extractFn(combinedText);
     if (!extraction) return null;
 

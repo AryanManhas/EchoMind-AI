@@ -1,5 +1,4 @@
 import prisma from '../lib/prisma.js';
-import { Prisma } from '@prisma/client';
 import { embeddingService } from '../ai/embedding.service.js';
 import { logger } from '../utils/logger.js';
 

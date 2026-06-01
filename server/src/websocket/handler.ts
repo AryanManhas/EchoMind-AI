@@ -23,6 +23,7 @@ import type {
   AuthUser,
 } from '@echomind/types';
 import { randomUUID } from 'crypto';
+import type { RankedMemory } from '../retrieval/ranking.engine.js';
 
 const log = createLogger('websocket');
 
@@ -62,7 +63,7 @@ const WS_RATE_LIMIT_MAX_MESSAGES = 50;
 export function setupWebSocket(wss: WebSocketServer) {
   // ─── Heartbeat ──────────────────────────────────────────────
   const interval = setInterval(() => {
-    wss.clients.forEach((ws) => {
+    wss.clients.forEach((ws: WebSocket) => {
       const client = ws as AuthenticatedSocket;
       if (!client.isAlive) {
         log.info({ sessionId: client.sessionId }, 'Client heartbeat timeout — terminating');
@@ -255,7 +256,7 @@ async function handleTextTranscript(
         take: 5,
         include: { segments: true, reminders: true }
       });
-      recentMemory = recentMemories.find(m => {
+      recentMemory = recentMemories.find((m: { metadata: unknown }) => {
         const meta = m.metadata as any;
         return meta && meta.sessionId === sessionId;
       });
@@ -280,7 +281,7 @@ async function handleTextTranscript(
         where: { memoryId: recentMemory.id },
         orderBy: { createdAt: 'asc' }
       });
-      const combinedText = allSegments.map(s => s.text).join(' ');
+      const combinedText = allSegments.map((s: { text: string }) => s.text).join(' ');
 
       const extraction = await extractMemory(combinedText);
       if (!extraction) {
@@ -500,7 +501,7 @@ async function handleQuery(
     }
 
     // Build context from results
-    const contextSnippets = results.slice(0, 5).map((m, i) =>
+    const contextSnippets = results.slice(0, 5).map((m: RankedMemory, i: number) =>
       `${i + 1}. [${m.category}] ${m.title}: ${m.summary}`
     ).join('\n');
 
@@ -511,7 +512,7 @@ async function handleQuery(
       type: 'QUERY_RESULT',
       query,
       language: langResult.language,
-      results: results.slice(0, 10).map(m => ({
+      results: results.slice(0, 10).map((m: RankedMemory) => ({
         id: m.id,
         title: m.title,
         summary: m.summary,
@@ -586,4 +587,3 @@ async function syncCalendarEvent(
 
   return event;
 }
-

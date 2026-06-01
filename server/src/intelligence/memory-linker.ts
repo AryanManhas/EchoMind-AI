@@ -26,6 +26,15 @@ export interface MemoryLink {
   reason: string;
 }
 
+interface LinkableMemory {
+  id: string;
+  title: string;
+  summary: string;
+  category?: string;
+  tags: string[];
+  createdAt: Date;
+}
+
 export class MemoryLinker {
   /**
    * Find related memories for a newly saved memory.
@@ -86,7 +95,7 @@ export class MemoryLinker {
     log.info({
       memoryId,
       linksFound: result.length,
-      types: result.map(l => l.linkType),
+      types: result.map((l: MemoryLink) => l.linkType),
     }, 'Memory links computed');
 
     return result;
@@ -138,8 +147,8 @@ export class MemoryLinker {
     ]);
 
     return {
-      predecessors: predecessors.map(p => p.id),
-      successors: successors.map(s => s.id),
+      predecessors: predecessors.map((p: { id: string }) => p.id),
+      successors: successors.map((s: { id: string }) => s.id),
     };
   }
 
@@ -150,7 +159,7 @@ export class MemoryLinker {
    */
   private static async findSemanticLinks(
     userId: string,
-    memory: any,
+    memory: LinkableMemory,
     minSimilarity: number,
   ): Promise<MemoryLink[]> {
     try {
@@ -171,7 +180,7 @@ export class MemoryLinker {
         LIMIT 5
       `;
 
-      return similar.map(s => ({
+      return similar.map((s: { id: string; title: string; similarity: number }) => ({
         sourceId: memory.id,
         targetId: s.id,
         linkType: 'semantic' as const,
@@ -189,7 +198,7 @@ export class MemoryLinker {
    */
   private static async findEntityLinks(
     userId: string,
-    memory: any,
+    memory: LinkableMemory,
   ): Promise<MemoryLink[]> {
     if (!memory.tags || memory.tags.length === 0) return [];
 
@@ -207,7 +216,7 @@ export class MemoryLinker {
     });
 
     return related
-      .map(r => {
+      .map((r: { id: string; title: string; tags: string[] }) => {
         const sharedTags = memory.tags.filter((t: string) => r.tags.includes(t));
         const strength = Math.min(1, sharedTags.length / Math.max(memory.tags.length, 1));
         return {
@@ -218,7 +227,7 @@ export class MemoryLinker {
           reason: `Shared entities: ${sharedTags.join(', ')}`,
         };
       })
-      .filter(l => l.strength >= 0.3);
+      .filter((l: MemoryLink) => l.strength >= 0.3);
   }
 
   /**
@@ -226,7 +235,7 @@ export class MemoryLinker {
    */
   private static async findTemporalLinks(
     userId: string,
-    memory: any,
+    memory: LinkableMemory,
     windowHours: number,
   ): Promise<MemoryLink[]> {
     const windowMs = windowHours * 60 * 60 * 1000;
@@ -245,7 +254,7 @@ export class MemoryLinker {
       take: 5,
     });
 
-    return nearby.map(n => {
+    return nearby.map((n: { id: string; title: string; createdAt: Date }) => {
       const timeDiff = Math.abs(memory.createdAt.getTime() - n.createdAt.getTime());
       const strength = Math.max(0, 1 - timeDiff / windowMs);
       return {

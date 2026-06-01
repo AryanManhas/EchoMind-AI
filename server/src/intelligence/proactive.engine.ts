@@ -51,7 +51,7 @@ export class ProactiveEngine {
     for (const reminder of upcoming) {
       const minutesUntilDue = (reminder.dueAt.getTime() - now.getTime()) / 60_000;
       const shouldNotify = reminder.advanceOffsets.some(
-        offset => Math.abs(minutesUntilDue - offset) < 3 // 3-minute tolerance
+        (offset: number) => Math.abs(minutesUntilDue - offset) < 3 // 3-minute tolerance
       );
 
       if (shouldNotify) {
@@ -102,14 +102,14 @@ export class ProactiveEngine {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user?.pushToken) return;
 
-    const taskList = missedTasks.map(t => `• ${t.title}`).join('\n');
+    const taskList = missedTasks.map((t: { title: string }) => `• ${t.title}`).join('\n');
 
     await enqueueNotification({
       userId,
       pushToken: user.pushToken,
       title: '📋 Pending Follow-ups',
       body: `You have ${missedTasks.length} important tasks without action:\n${taskList}`,
-      data: { type: 'followup', memoryIds: missedTasks.map(t => t.id) },
+      data: { type: 'followup', memoryIds: missedTasks.map((t: { id: string }) => t.id) },
     });
 
     log.info({ userId, count: missedTasks.length }, 'Follow-up notification sent');
